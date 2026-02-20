@@ -79,6 +79,10 @@ export interface DashboardSummary {
   total_capex: number;
   net_profit: number;
   burn_rate: number;
+  budget_revenue: number;
+  budget_cogs: number;
+  budget_opex: number;
+  budget_capex: number;
   revenue_by_period: { period: string; amount: number }[];
   expense_by_period: { period: string; amount: number }[];
   expense_by_category: { name: string; amount: number; color: string }[];

@@ -1,5 +1,4 @@
 import { useCallback, useMemo } from "react";
-import { api } from "@/lib/api";
 import type { KPIMetric } from "@/lib/types";
 import { useApi } from "@/hooks/useApi";
 
@@ -16,12 +15,8 @@ interface UseKPIResult {
 export function useKPI(period?: string, groupName?: string): UseKPIResult {
   const endpoint = useMemo(() => {
     const params = new URLSearchParams();
-    if (period) {
-      params.set("period", period);
-    }
-    if (groupName) {
-      params.set("group_name", groupName);
-    }
+    if (period) params.set("period", period);
+    if (groupName) params.set("group_name", groupName);
     const qs = params.toString();
     return `kpi.php${qs ? `?${qs}` : ""}`;
   }, [period, groupName]);
@@ -31,31 +26,26 @@ export function useKPI(period?: string, groupName?: string): UseKPIResult {
     groupName,
   ]);
 
+  // CRUD ops are no-ops in static mode
   const createKPI = useCallback(
     async (body: Omit<KPIMetric, "id">): Promise<KPIMetric> => {
-      const res = await api.post<KPIMetric>("kpi.php", body);
-      refetch();
-      return res.data;
+      console.warn("[Static mode] createKPI is disabled");
+      return { id: 0, ...body } as KPIMetric;
     },
-    [refetch]
+    []
   );
 
   const updateKPI = useCallback(
     async (id: number, body: Partial<KPIMetric>): Promise<KPIMetric> => {
-      const res = await api.put<KPIMetric>(`kpi.php?id=${id}`, body);
-      refetch();
-      return res.data;
+      console.warn("[Static mode] updateKPI is disabled");
+      return { id, ...body } as KPIMetric;
     },
-    [refetch]
+    []
   );
 
-  const deleteKPI = useCallback(
-    async (id: number): Promise<void> => {
-      await api.delete<void>(`kpi.php?id=${id}`);
-      refetch();
-    },
-    [refetch]
-  );
+  const deleteKPI = useCallback(async (_id: number): Promise<void> => {
+    console.warn("[Static mode] deleteKPI is disabled");
+  }, []);
 
   return {
     kpis: data ?? [],

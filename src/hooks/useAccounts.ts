@@ -1,5 +1,4 @@
 import { useCallback, useMemo } from "react";
-import { api } from "@/lib/api";
 import type { Account } from "@/lib/types";
 import { useApi } from "@/hooks/useApi";
 
@@ -16,9 +15,7 @@ interface UseAccountsResult {
 export function useAccounts(categoryId?: number): UseAccountsResult {
   const endpoint = useMemo(() => {
     const params = new URLSearchParams();
-    if (categoryId !== undefined) {
-      params.set("category_id", String(categoryId));
-    }
+    if (categoryId !== undefined) params.set("category_id", String(categoryId));
     const qs = params.toString();
     return `accounts.php${qs ? `?${qs}` : ""}`;
   }, [categoryId]);
@@ -27,31 +24,26 @@ export function useAccounts(categoryId?: number): UseAccountsResult {
     categoryId,
   ]);
 
+  // CRUD ops are no-ops in static mode
   const createAccount = useCallback(
     async (body: Omit<Account, "id">): Promise<Account> => {
-      const res = await api.post<Account>("accounts.php", body);
-      refetch();
-      return res.data;
+      console.warn("[Static mode] createAccount is disabled");
+      return { id: 0, ...body } as Account;
     },
-    [refetch]
+    []
   );
 
   const updateAccount = useCallback(
     async (id: number, body: Partial<Account>): Promise<Account> => {
-      const res = await api.put<Account>(`accounts.php?id=${id}`, body);
-      refetch();
-      return res.data;
+      console.warn("[Static mode] updateAccount is disabled");
+      return { id, ...body } as Account;
     },
-    [refetch]
+    []
   );
 
-  const deleteAccount = useCallback(
-    async (id: number): Promise<void> => {
-      await api.delete<void>(`accounts.php?id=${id}`);
-      refetch();
-    },
-    [refetch]
-  );
+  const deleteAccount = useCallback(async (_id: number): Promise<void> => {
+    console.warn("[Static mode] deleteAccount is disabled");
+  }, []);
 
   return {
     accounts: data ?? [],

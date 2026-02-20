@@ -1,5 +1,4 @@
 import { useCallback, useMemo } from "react";
-import { api } from "@/lib/api";
 import type { LedgerEntry } from "@/lib/types";
 import { useApi } from "@/hooks/useApi";
 
@@ -22,12 +21,8 @@ export function useLedger(
 ): UseLedgerResult {
   const endpoint = useMemo(() => {
     const params = new URLSearchParams();
-    if (period) {
-      params.set("period", period);
-    }
-    if (categoryType) {
-      params.set("category_type", categoryType);
-    }
+    if (period) params.set("period", period);
+    if (categoryType) params.set("category_type", categoryType);
     const qs = params.toString();
     return `ledger.php${qs ? `?${qs}` : ""}`;
   }, [period, categoryType]);
@@ -37,31 +32,26 @@ export function useLedger(
     categoryType,
   ]);
 
+  // CRUD ops are no-ops in static mode (data is read-only)
   const createEntry = useCallback(
     async (body: Omit<LedgerEntry, "id">): Promise<LedgerEntry> => {
-      const res = await api.post<LedgerEntry>("ledger.php", body);
-      refetch();
-      return res.data;
+      console.warn("[Static mode] createEntry is disabled");
+      return { id: 0, ...body } as LedgerEntry;
     },
-    [refetch]
+    []
   );
 
   const updateEntry = useCallback(
     async (id: number, body: Partial<LedgerEntry>): Promise<LedgerEntry> => {
-      const res = await api.put<LedgerEntry>(`ledger.php?id=${id}`, body);
-      refetch();
-      return res.data;
+      console.warn("[Static mode] updateEntry is disabled");
+      return { id, ...body } as LedgerEntry;
     },
-    [refetch]
+    []
   );
 
-  const deleteEntry = useCallback(
-    async (id: number): Promise<void> => {
-      await api.delete<void>(`ledger.php?id=${id}`);
-      refetch();
-    },
-    [refetch]
-  );
+  const deleteEntry = useCallback(async (_id: number): Promise<void> => {
+    console.warn("[Static mode] deleteEntry is disabled");
+  }, []);
 
   return {
     entries: data ?? [],
