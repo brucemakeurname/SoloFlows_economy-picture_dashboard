@@ -25,39 +25,39 @@ export default function Settings() {
   const periodColumns = [
     {
       key: "code",
-      header: "Ma ky",
+      header: "Period Code",
       sortable: true,
     },
     {
       key: "label",
-      header: "Nhan",
+      header: "Label",
     },
     {
       key: "start_date",
-      header: "Ngay bat dau",
+      header: "Start Date",
       render: (row: Record<string, unknown>) =>
-        new Date(String(row.start_date)).toLocaleDateString("vi-VN"),
+        new Date(String(row.start_date)).toLocaleDateString("en-US"),
     },
     {
       key: "end_date",
-      header: "Ngay ket thuc",
+      header: "End Date",
       render: (row: Record<string, unknown>) =>
-        new Date(String(row.end_date)).toLocaleDateString("vi-VN"),
+        new Date(String(row.end_date)).toLocaleDateString("en-US"),
     },
     {
       key: "is_active",
-      header: "Trang thai",
+      header: "Status",
       render: (row: Record<string, unknown>) => (
         <Badge variant={row.is_active ? "success" : "outline"}>
           {row.is_active ? (
             <span className="flex items-center gap-1">
               <CheckCircle className="h-3 w-3" />
-              Dang hoat dong
+              Active
             </span>
           ) : (
             <span className="flex items-center gap-1">
               <Clock className="h-3 w-3" />
-              Khong hoat dong
+              Inactive
             </span>
           )}
         </Badge>
@@ -66,25 +66,25 @@ export default function Settings() {
   ];
 
   const handleExportCSV = useCallback(() => {
-    alert("Xuat CSV -- Tinh nang dang duoc phat trien");
+    alert("Export CSV -- Feature coming soon");
   }, []);
 
   const handleExportJSON = useCallback(() => {
-    alert("Xuat JSON -- Tinh nang dang duoc phat trien");
+    alert("Export JSON -- Feature coming soon");
   }, []);
 
   return (
-    <PageContainer title="Cai dat" description="Quan ly cau hinh va du lieu">
+    <PageContainer title="Settings" description="Manage configuration and data">
       <div className="space-y-6">
         {/* Section 1: Data Sources */}
         <Card>
           <CardHeader>
             <div className="flex items-center gap-2">
               <Database className="h-5 w-5 text-primary" />
-              <CardTitle>Nguon du lieu</CardTitle>
+              <CardTitle>Data Sources</CardTitle>
             </div>
             <CardDescription>
-              Cac nguon du lieu dang duoc ket noi
+              Connected data sources
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -97,7 +97,7 @@ export default function Settings() {
                   <div>
                     <p className="font-medium text-foreground">Manual Entry</p>
                     <p className="text-sm text-muted-foreground">
-                      Nhap lieu thu cong qua giao dien
+                      Manual data entry via interface
                     </p>
                   </div>
                 </div>
@@ -115,7 +115,7 @@ export default function Settings() {
                   <div>
                     <p className="font-medium text-foreground">Supabase API</p>
                     <p className="text-sm text-muted-foreground">
-                      Dong bo du lieu tu Supabase backend
+                      Sync data from Supabase backend
                     </p>
                   </div>
                 </div>
@@ -133,10 +133,10 @@ export default function Settings() {
           <CardHeader>
             <div className="flex items-center gap-2">
               <Calendar className="h-5 w-5 text-primary" />
-              <CardTitle>Quan ly ky</CardTitle>
+              <CardTitle>Period Management</CardTitle>
             </div>
             <CardDescription>
-              Danh sach cac ky ke toan va trang thai
+              Accounting periods and their status
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -144,7 +144,7 @@ export default function Settings() {
               columns={periodColumns}
               data={(periods ?? []) as unknown as Record<string, unknown>[]}
               loading={periodsLoading}
-              emptyMessage="Chua co ky nao duoc thiet lap"
+              emptyMessage="No periods configured"
             />
           </CardContent>
         </Card>
@@ -154,10 +154,10 @@ export default function Settings() {
           <CardHeader>
             <div className="flex items-center gap-2">
               <Download className="h-5 w-5 text-primary" />
-              <CardTitle>Xuat du lieu</CardTitle>
+              <CardTitle>Data Export</CardTitle>
             </div>
             <CardDescription>
-              Tai du lieu xuong may tinh de luu tru hoac phan tich ngoai he thong
+              Download data for backup or external analysis
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -179,17 +179,17 @@ export default function Settings() {
           <CardHeader>
             <div className="flex items-center gap-2">
               <Globe className="h-5 w-5 text-primary" />
-              <CardTitle>Cau hinh API</CardTitle>
+              <CardTitle>API Configuration</CardTitle>
             </div>
             <CardDescription>
-              Ket noi voi cac dich vu ben ngoai
+              Connect to external services
             </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="rounded-lg border border-dashed p-8 text-center">
               <Globe className="mx-auto h-12 w-12 text-muted-foreground/50" />
               <p className="mt-4 text-sm text-muted-foreground">
-                Ket noi API tu dong se duoc ho tro trong phien ban tiep theo
+                Automated API connection will be available in the next version
               </p>
             </div>
           </CardContent>

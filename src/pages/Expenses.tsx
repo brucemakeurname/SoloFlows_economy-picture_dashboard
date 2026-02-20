@@ -67,22 +67,22 @@ export default function Expenses() {
 
   if (error) {
     return (
-      <PageContainer title="Chi phi" description="Phan tich chi phi va xu huong">
+      <PageContainer title="Expenses" description="Expense analysis and trends">
         <div className="flex items-center justify-center py-12 text-destructive">
-          Khong the tai du lieu chi phi.
+          Unable to load expense data.
         </div>
       </PageContainer>
     );
   }
 
   return (
-    <PageContainer title="Chi phi" description="Phan tich chi phi va xu huong">
+    <PageContainer title="Expenses" description="Expense analysis and trends">
       <div className="space-y-6">
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <BarChart3 className="h-5 w-5 text-primary" />
-              Phan bo chi phi
+              Expense Breakdown
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -92,14 +92,14 @@ export default function Expenses() {
               </div>
             ) : expenseBreakdown.length === 0 ? (
               <div className="flex h-[350px] items-center justify-center text-muted-foreground">
-                Khong co du lieu chi phi
+                No expense data
               </div>
             ) : (
               <ErrorBoundary name="ExpenseBar">
                 <BarChartWidget
                   data={expenseBreakdown}
                   xKey="name"
-                  bars={[{ key: "amount", color: CHART_COLORS.red, name: "So tien" }]}
+                  bars={[{ key: "amount", color: CHART_COLORS.red, name: "Amount" }]}
                   horizontal
                   height={350}
                   formatValue={(v) => formatCurrency(v)}
@@ -112,7 +112,7 @@ export default function Expenses() {
         <div>
           <h3 className="mb-4 flex items-center gap-2 text-lg font-semibold text-foreground">
             <TrendingDown className="h-5 w-5 text-primary" />
-            Top 5 chi phi lon nhat
+            Top 5 Largest Expenses
           </h3>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
             {loading
@@ -153,7 +153,7 @@ export default function Expenses() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <DollarSign className="h-5 w-5 text-primary" />
-                So sanh COGS va OpEx
+                COGS vs OpEx Comparison
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -166,7 +166,7 @@ export default function Expenses() {
                   <BarChartWidget
                     data={cogsVsOpex}
                     xKey="category"
-                    bars={[{ key: "amount", color: CHART_COLORS.purple, name: "So tien" }]}
+                    bars={[{ key: "amount", color: CHART_COLORS.purple, name: "Amount" }]}
                     height={350}
                     formatValue={(v) => formatCurrency(v)}
                   />
@@ -179,7 +179,7 @@ export default function Expenses() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <TrendingDown className="h-5 w-5 text-primary" />
-                Xu huong chi phi
+                Expense Trend
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -189,7 +189,7 @@ export default function Expenses() {
                 </div>
               ) : costTrend.length === 0 ? (
                 <div className="flex h-[350px] items-center justify-center text-muted-foreground">
-                  Khong co du lieu xu huong
+                  No trend data
                 </div>
               ) : (
                 <ErrorBoundary name="CostTrend">
@@ -199,7 +199,7 @@ export default function Expenses() {
                     lines={[
                       { key: "cogs", color: CHART_COLORS.orange, name: "COGS" },
                       { key: "opex", color: CHART_COLORS.red, name: "OpEx" },
-                      { key: "total", color: CHART_COLORS.muted, name: "Tong" },
+                      { key: "total", color: CHART_COLORS.muted, name: "Total" },
                     ]}
                     height={350}
                     formatValue={(v) => formatCurrency(v)}

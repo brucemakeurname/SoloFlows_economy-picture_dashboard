@@ -7,15 +7,8 @@ export function cn(...inputs: ClassValue[]) {
 
 export function formatCurrency(
   value: number,
-  currency: string = "VND"
+  _currency: string = "USD"
 ): string {
-  if (currency === "VND") {
-    return new Intl.NumberFormat("vi-VN", {
-      style: "currency",
-      currency: "VND",
-      maximumFractionDigits: 0,
-    }).format(value);
-  }
   return new Intl.NumberFormat("en-US", {
     style: "currency",
     currency: "USD",
@@ -25,7 +18,7 @@ export function formatCurrency(
 }
 
 export function formatNumber(value: number): string {
-  return new Intl.NumberFormat("vi-VN").format(value);
+  return new Intl.NumberFormat("en-US").format(value);
 }
 
 export function formatPercent(value: number): string {
@@ -34,5 +27,7 @@ export function formatPercent(value: number): string {
 
 export function periodToLabel(period: string): string {
   const [year, month] = period.split("-");
-  return `T${month}/${year}`;
+  const monthNames = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+  const idx = parseInt(month, 10) - 1;
+  return `${monthNames[idx] ?? month}/${year}`;
 }

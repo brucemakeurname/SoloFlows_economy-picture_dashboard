@@ -65,8 +65,8 @@ function KPIMetricCard({ kpi }: { kpi: KPIMetric }) {
         {/* Target vs Actual Progress Bar */}
         <div className="mt-3">
           <div className="mb-1 flex items-center justify-between text-xs text-muted-foreground">
-            <span>Hien tai: {formatNumber(kpi.current_value)}</span>
-            <span>Muc tieu: {formatNumber(kpi.target_value ?? 0)}</span>
+            <span>Current: {formatNumber(kpi.current_value)}</span>
+            <span>Target: {formatNumber(kpi.target_value ?? 0)}</span>
           </div>
           <div className="h-2.5 w-full rounded-full bg-muted">
             <div
@@ -117,7 +117,7 @@ function KPIGrid({
     return (
       <div className="flex h-48 items-center justify-center rounded-lg border border-dashed text-muted-foreground">
         <Target className="mr-2 h-5 w-5" />
-        Khong co chi so KPI nao trong nhom nay
+        No KPI metrics in this group
       </div>
     );
   }
@@ -149,30 +149,30 @@ export default function KPIDashboard() {
   }, [kpis]);
 
   return (
-    <PageContainer title="KPI Dashboard" description="Theo doi chi so hieu suat">
+    <PageContainer title="KPI Dashboard" description="Track performance metrics">
       <div className="space-y-6">
         {/* Summary KPI Cards */}
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <KPICard
-            title="Tong chi so"
+            title="Total Metrics"
             value={String(statusCounts.total)}
             icon={<Gauge className="h-6 w-6" />}
             trend="flat"
           />
           <KPICard
-            title="Dat muc tieu"
+            title="On Track"
             value={String(statusCounts.on_track)}
             icon={<Target className="h-6 w-6" />}
             trend="up"
           />
           <KPICard
-            title="Canh bao"
+            title="Warning"
             value={String(statusCounts.warning)}
             icon={<AlertTriangle className="h-6 w-6" />}
             trend="flat"
           />
           <KPICard
-            title="Chua dat"
+            title="Off Track"
             value={String(statusCounts.off_track)}
             icon={<TrendingUp className="h-6 w-6" />}
             trend="down"

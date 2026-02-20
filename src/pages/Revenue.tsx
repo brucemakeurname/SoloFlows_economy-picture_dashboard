@@ -52,7 +52,7 @@ function num(v: unknown): number {
   return Number.isFinite(n) ? n : 0;
 }
 
-const vndFormatter = (v: number) => formatCurrency(v, "VND");
+const usdFormatter = (v: number) => formatCurrency(v);
 
 /* -------------------------------------------------------------------------- */
 /*  Revenue page                                                               */
@@ -87,7 +87,7 @@ export default function Revenue() {
     // Collect unique subcategories from ledger entries
     const subcategorySet = new Set<string>();
     entries.forEach((entry) => {
-      const sub = entry.category_name ?? "Khac";
+      const sub = entry.category_name ?? "Other";
       subcategorySet.add(sub);
     });
     const subcategories = Array.from(subcategorySet);
@@ -96,8 +96,8 @@ export default function Revenue() {
     const grouped: Record<string, Record<string, number>> = {};
     entries.forEach((entry) => {
       const accountName =
-        entry.account_name ?? entry.account_code ?? `TK #${entry.account_id}`;
-      const sub = entry.category_name ?? "Khac";
+        entry.account_name ?? entry.account_code ?? `Acct #${entry.account_id}`;
+      const sub = entry.category_name ?? "Other";
 
       if (!grouped[accountName]) {
         grouped[accountName] = {};
@@ -156,8 +156,8 @@ export default function Revenue() {
   if (loading) {
     return (
       <PageContainer
-        title="Doanh thu"
-        description="Phan tich doanh thu theo kenh va xu huong"
+        title="Revenue"
+        description="Revenue analysis by channel and trend"
       >
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
           {Array.from({ length: 4 }).map((_, i) => (
@@ -170,19 +170,19 @@ export default function Revenue() {
 
   return (
     <PageContainer
-      title="Doanh thu"
-      description="Phan tich doanh thu theo kenh va xu huong"
+      title="Revenue"
+      description="Revenue analysis by channel and trend"
     >
       {/* ---- Summary bar ---- */}
       <div className="mb-6 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <p className="text-sm text-muted-foreground">
-          Tong doanh thu ky nay:{" "}
+          Total revenue this period:{" "}
           <span className="font-semibold text-foreground">
             {formatCurrency(totalRevenue)}
           </span>
         </p>
         <p className="text-sm text-muted-foreground">
-          So but toan:{" "}
+          Entries:{" "}
           <span className="font-semibold text-foreground">
             {entries.length}
           </span>
@@ -194,7 +194,7 @@ export default function Revenue() {
         {/* 1. Revenue by Channel stacked bar chart */}
         <Card>
           <CardHeader>
-            <CardTitle>Doanh thu theo kenh</CardTitle>
+            <CardTitle>Revenue by Channel</CardTitle>
           </CardHeader>
           <CardContent>
             <ErrorBoundary name="BarChart">
@@ -209,11 +209,11 @@ export default function Revenue() {
                   }))}
                   height={350}
                   stacked
-                  formatValue={vndFormatter}
+                  formatValue={usdFormatter}
                 />
               ) : (
                 <div className="flex h-[350px] items-center justify-center text-sm text-muted-foreground">
-                  Khong co du lieu doanh thu
+                  No revenue data
                 </div>
               )}
             </ErrorBoundary>
@@ -223,7 +223,7 @@ export default function Revenue() {
         {/* 2. Monthly Revenue Trend line chart */}
         <Card>
           <CardHeader>
-            <CardTitle>Xu huong doanh thu hang thang</CardTitle>
+            <CardTitle>Monthly Revenue Trend</CardTitle>
           </CardHeader>
           <CardContent>
             <ErrorBoundary name="LineChart">
@@ -235,15 +235,15 @@ export default function Revenue() {
                     {
                       key: "amount",
                       color: CHART_COLORS.green,
-                      name: "Doanh thu",
+                      name: "Revenue",
                     },
                   ]}
                   height={350}
-                  formatValue={vndFormatter}
+                  formatValue={usdFormatter}
                 />
               ) : (
                 <div className="flex h-[350px] items-center justify-center text-sm text-muted-foreground">
-                  Khong co du lieu xu huong
+                  No trend data
                 </div>
               )}
             </ErrorBoundary>
@@ -253,7 +253,7 @@ export default function Revenue() {
         {/* 3. Revenue Mix pie chart */}
         <Card>
           <CardHeader>
-            <CardTitle>Co cau doanh thu</CardTitle>
+            <CardTitle>Revenue Mix</CardTitle>
           </CardHeader>
           <CardContent>
             <ErrorBoundary name="PieChart">
@@ -261,11 +261,11 @@ export default function Revenue() {
                 <PieChartWidget
                   data={revenueMixData}
                   height={350}
-                  formatValue={vndFormatter}
+                  formatValue={usdFormatter}
                 />
               ) : (
                 <div className="flex h-[350px] items-center justify-center text-sm text-muted-foreground">
-                  Khong co du lieu co cau
+                  No mix data
                 </div>
               )}
             </ErrorBoundary>
@@ -275,29 +275,29 @@ export default function Revenue() {
         {/* 4. Growth Rate KPI card + detail panel */}
         <Card>
           <CardHeader>
-            <CardTitle>Tang truong doanh thu</CardTitle>
+            <CardTitle>Revenue Growth</CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
             <KPICard
-              title="Ty le tang truong"
+              title="Growth Rate"
               value={formatPercent(growthRate)}
               icon={<TrendingUp className="h-6 w-6" />}
               trend={
                 growthRate > 0 ? "up" : growthRate < 0 ? "down" : "flat"
               }
               change={growthRate}
-              changeLabel="so voi ky truoc"
+              changeLabel="vs previous period"
             />
 
             {/* Detail breakdown */}
             <div className="space-y-3 rounded-xl border bg-card p-4">
               <h3 className="text-sm font-semibold text-foreground">
-                Chi tiet tang truong
+                Growth Details
               </h3>
               <div className="space-y-2">
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-muted-foreground">
-                    Tong doanh thu ky nay
+                    Total revenue this period
                   </span>
                   <span className="font-medium text-foreground">
                     {formatCurrency(totalRevenue)}
@@ -305,14 +305,14 @@ export default function Revenue() {
                 </div>
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-muted-foreground">
-                    So kenh doanh thu
+                    Revenue channels
                   </span>
                   <span className="font-medium text-foreground">
                     {revenueMixData.length}
                   </span>
                 </div>
                 <div className="flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground">So but toan</span>
+                  <span className="text-muted-foreground">Entries</span>
                   <span className="font-medium text-foreground">
                     {entries.length}
                   </span>
@@ -320,7 +320,7 @@ export default function Revenue() {
                 {revenueMixData.length > 0 && (
                   <div className="flex items-center justify-between text-sm">
                     <span className="text-muted-foreground">
-                      Kenh lon nhat
+                      Top channel
                     </span>
                     <span className="font-medium text-foreground">
                       {

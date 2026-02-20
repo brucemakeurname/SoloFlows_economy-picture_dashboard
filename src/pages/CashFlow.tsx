@@ -23,7 +23,7 @@ function num(v: unknown): number {
   return Number.isFinite(n) ? n : 0;
 }
 
-const vndFormatter = (v: number) => formatCurrency(v, "VND");
+const usdFormatter = (v: number) => formatCurrency(v);
 
 function varianceBadge(variance: number) {
   if (variance > 0) {
@@ -52,9 +52,9 @@ function statusBadge(status: LedgerEntry["status"]) {
     LedgerEntry["status"],
     { label: string; variant: "default" | "success" | "warning" | "outline" }
   > = {
-    forecast: { label: "Du bao", variant: "warning" },
-    actual: { label: "Thuc te", variant: "success" },
-    closed: { label: "Da dong", variant: "outline" },
+    forecast: { label: "Forecast", variant: "warning" },
+    actual: { label: "Actual", variant: "success" },
+    closed: { label: "Closed", variant: "outline" },
   };
 
   const { label, variant } = config[status];
@@ -90,7 +90,7 @@ export default function CashFlow() {
     () => [
       {
         key: "account_code",
-        header: "Ma TK",
+        header: "Code",
         sortable: true,
         render: (row: LedgerEntry) => (
           <span className="font-mono text-sm font-medium text-foreground">
@@ -100,7 +100,7 @@ export default function CashFlow() {
       },
       {
         key: "account_name",
-        header: "Ten tai khoan",
+        header: "Account Name",
         sortable: true,
         render: (row: LedgerEntry) => (
           <span className="text-sm text-foreground">
@@ -110,7 +110,7 @@ export default function CashFlow() {
       },
       {
         key: "category_name",
-        header: "Loai",
+        header: "Category",
         sortable: true,
         render: (row: LedgerEntry) => (
           <Badge variant="outline">{row.category_name ?? "---"}</Badge>
@@ -118,33 +118,33 @@ export default function CashFlow() {
       },
       {
         key: "budget",
-        header: "Ngan sach",
+        header: "Budget",
         align: "right" as const,
         sortable: true,
         render: (row: LedgerEntry) => (
           <EditableCell
             value={row.budget}
             onSave={handleBudgetSave(row)}
-            formatDisplay={vndFormatter}
+            formatDisplay={usdFormatter}
           />
         ),
       },
       {
         key: "actual",
-        header: "Thuc te",
+        header: "Actual",
         align: "right" as const,
         sortable: true,
         render: (row: LedgerEntry) => (
           <EditableCell
             value={row.actual}
             onSave={handleActualSave(row)}
-            formatDisplay={vndFormatter}
+            formatDisplay={usdFormatter}
           />
         ),
       },
       {
         key: "variance",
-        header: "Chenh lech",
+        header: "Variance",
         align: "right" as const,
         sortable: true,
         render: (row: LedgerEntry) => {
@@ -154,7 +154,7 @@ export default function CashFlow() {
       },
       {
         key: "status",
-        header: "Trang thai",
+        header: "Status",
         align: "center" as const,
         render: (row: LedgerEntry) => statusBadge(row.status),
       },
@@ -217,14 +217,14 @@ export default function CashFlow() {
 
   return (
     <PageContainer
-      title="Dong tien"
-      description="Quan ly ngan sach va dong tien thuc te"
+      title="Cash Flow"
+      description="Manage budget and actual cash flow"
     >
       {/* ---- Variance Summary Row ---- */}
       <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
         <Card>
           <CardContent className="p-4">
-            <p className="text-sm text-muted-foreground">Tong ngan sach</p>
+            <p className="text-sm text-muted-foreground">Total Budget</p>
             <p className="text-xl font-bold text-foreground">
               {formatCurrency(varianceSummary.totalBudget)}
             </p>
@@ -232,7 +232,7 @@ export default function CashFlow() {
         </Card>
         <Card>
           <CardContent className="p-4">
-            <p className="text-sm text-muted-foreground">Tong thuc te</p>
+            <p className="text-sm text-muted-foreground">Total Actual</p>
             <p className="text-xl font-bold text-foreground">
               {formatCurrency(varianceSummary.totalActual)}
             </p>
@@ -240,7 +240,7 @@ export default function CashFlow() {
         </Card>
         <Card>
           <CardContent className="p-4">
-            <p className="text-sm text-muted-foreground">Tong chenh lech</p>
+            <p className="text-sm text-muted-foreground">Total Variance</p>
             <p
               className={cn(
                 "text-xl font-bold",
@@ -255,9 +255,9 @@ export default function CashFlow() {
               {formatCurrency(varianceSummary.totalVariance)}
             </p>
             <p className="mt-1 text-xs text-muted-foreground">
-              {varianceSummary.underBudgetCount} duoi ngan sach
+              {varianceSummary.underBudgetCount} under budget
               {" / "}
-              {varianceSummary.overBudgetCount} vuot ngan sach
+              {varianceSummary.overBudgetCount} over budget
             </p>
           </CardContent>
         </Card>
@@ -266,14 +266,14 @@ export default function CashFlow() {
       {/* ---- Editable Ledger Table ---- */}
       <Card className="mb-6">
         <CardHeader>
-          <CardTitle>So cai dong tien</CardTitle>
+          <CardTitle>Cash Flow Ledger</CardTitle>
         </CardHeader>
         <CardContent>
           <DataTable
             columns={columns}
             data={entries as (LedgerEntry & Record<string, unknown>)[]}
             loading={loading}
-            emptyMessage="Khong co du lieu dong tien cho ky nay"
+            emptyMessage="No cash flow data for this period"
           />
         </CardContent>
       </Card>
@@ -283,7 +283,7 @@ export default function CashFlow() {
         {/* Budget vs Actual Grouped Bar Chart */}
         <Card>
           <CardHeader>
-            <CardTitle>Ngan sach vs Thuc te</CardTitle>
+            <CardTitle>Budget vs Actual</CardTitle>
           </CardHeader>
           <CardContent>
             <ErrorBoundary name="BarChart">
@@ -294,20 +294,20 @@ export default function CashFlow() {
                   bars={[
                     {
                       key: "budget",
-                      name: "Ngan sach",
+                      name: "Budget",
                       color: CHART_COLORS.blue,
                     },
                     {
                       key: "actual",
-                      name: "Thuc te",
+                      name: "Actual",
                       color: CHART_COLORS.orange,
                     },
                   ]}
-                  formatValue={vndFormatter}
+                  formatValue={usdFormatter}
                 />
               ) : (
                 <div className="flex h-[350px] items-center justify-center text-sm text-muted-foreground">
-                  Khong co du lieu
+                  No data available
                 </div>
               )}
             </ErrorBoundary>
@@ -317,7 +317,7 @@ export default function CashFlow() {
         {/* Running Balance Area Chart */}
         <Card>
           <CardHeader>
-            <CardTitle>So du luy ke</CardTitle>
+            <CardTitle>Running Balance</CardTitle>
           </CardHeader>
           <CardContent>
             <ErrorBoundary name="AreaChart">
@@ -328,20 +328,20 @@ export default function CashFlow() {
                   areas={[
                     {
                       key: "budget_balance",
-                      name: "So du ngan sach",
+                      name: "Budget Balance",
                       color: CHART_COLORS.blue,
                     },
                     {
                       key: "actual_balance",
-                      name: "So du thuc te",
+                      name: "Actual Balance",
                       color: CHART_COLORS.green,
                     },
                   ]}
-                  formatValue={vndFormatter}
+                  formatValue={usdFormatter}
                 />
               ) : (
                 <div className="flex h-[350px] items-center justify-center text-sm text-muted-foreground">
-                  Khong co du lieu
+                  No data available
                 </div>
               )}
             </ErrorBoundary>

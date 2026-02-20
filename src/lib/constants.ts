@@ -30,17 +30,17 @@ export const KPI_STATUS_CONFIG = {
 export const KPI_GROUPS = ["finance", "marketing", "growth", "product"] as const;
 
 export const LEDGER_STATUS_OPTIONS = [
-  { value: "forecast", label: "Du bao" },
-  { value: "actual", label: "Thuc te" },
-  { value: "closed", label: "Da dong" },
+  { value: "forecast", label: "Forecast" },
+  { value: "actual", label: "Actual" },
+  { value: "closed", label: "Closed" },
 ] as const;
 
 export const NAV_ITEMS = [
-  { path: "/", label: "Tong quan", icon: "Home" },
-  { path: "/cashflow", label: "Dong tien", icon: "Wallet" },
-  { path: "/revenue", label: "Doanh thu", icon: "TrendingUp" },
-  { path: "/expenses", label: "Chi phi", icon: "CreditCard" },
+  { path: "/", label: "Overview", icon: "Home" },
+  { path: "/cashflow", label: "Cash Flow", icon: "Wallet" },
+  { path: "/revenue", label: "Revenue", icon: "TrendingUp" },
+  { path: "/expenses", label: "Expenses", icon: "CreditCard" },
   { path: "/kpi", label: "KPI", icon: "Gauge" },
-  { path: "/data-entry", label: "Nhap lieu", icon: "Database" },
-  { path: "/settings", label: "Cai dat", icon: "Settings" },
+  { path: "/data-entry", label: "Data Entry", icon: "Database" },
+  { path: "/settings", label: "Settings", icon: "Settings" },
 ] as const;

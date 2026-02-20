@@ -55,7 +55,7 @@ function num(v: unknown): number {
   return Number.isFinite(n) ? n : 0;
 }
 
-const vndFormatter = (v: number) => formatCurrency(v, "VND");
+const usdFormatter = (v: number) => formatCurrency(v);
 
 /* -------------------------------------------------------------------------- */
 /*  Overview page                                                              */
@@ -119,8 +119,8 @@ export default function Overview() {
   if (loading || !data) {
     return (
       <PageContainer
-        title="Tong quan"
-        description="Buc tranh tai chinh toan canh"
+        title="Overview"
+        description="Full financial picture at a glance"
       >
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {Array.from({ length: 4 }).map((_, i) => (
@@ -148,13 +148,13 @@ export default function Overview() {
 
   return (
     <PageContainer
-      title="Tong quan"
-      description="Buc tranh tai chinh toan canh"
+      title="Overview"
+      description="Full financial picture at a glance"
     >
       {/* ---- 4 KPI Cards Row ---- */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <KPICard
-          title="Tong Doanh thu"
+          title="Total Revenue"
           value={formatCurrency(totalRevenue)}
           icon={<DollarSign className="h-6 w-6" />}
           trend={totalRevenue > 0 ? "up" : "flat"}
@@ -162,17 +162,17 @@ export default function Overview() {
           changeLabel="margin"
         />
         <KPICard
-          title="Tong Chi phi"
+          title="Total Expenses"
           value={formatCurrency(totalExpenses)}
           icon={<CreditCard className="h-6 w-6" />}
           trend={totalExpenses > totalRevenue ? "up" : "down"}
         />
         <KPICard
-          title="Loi nhuan rong"
+          title="Net Profit"
           value={formatCurrency(netProfit)}
           icon={<TrendingUp className="h-6 w-6" />}
           change={profitMargin}
-          changeLabel="ty suat"
+          changeLabel="margin"
           trend={netProfit >= 0 ? "up" : "down"}
         />
         <KPICard
@@ -180,7 +180,7 @@ export default function Overview() {
           value={formatCurrency(burnRate)}
           icon={<Flame className="h-6 w-6" />}
           trend={burnRate > 0 ? "down" : "flat"}
-          changeLabel="/ thang"
+          changeLabel="/ month"
         />
       </div>
 
@@ -189,7 +189,7 @@ export default function Overview() {
         {/* 1. Revenue vs Expenses grouped bar chart */}
         <Card>
           <CardHeader>
-            <CardTitle>Doanh thu vs Chi phi</CardTitle>
+            <CardTitle>Revenue vs Expenses</CardTitle>
           </CardHeader>
           <CardContent>
             <ErrorBoundary name="BarChart">
@@ -200,20 +200,20 @@ export default function Overview() {
                   bars={[
                     {
                       key: "revenue",
-                      name: "Doanh thu",
+                      name: "Revenue",
                       color: CHART_COLORS.green,
                     },
                     {
                       key: "opex",
-                      name: "Chi phi van hanh",
+                      name: "Operating Expenses",
                       color: CHART_COLORS.red,
                     },
                   ]}
-                  formatValue={vndFormatter}
+                  formatValue={usdFormatter}
                 />
               ) : (
                 <div className="flex h-[350px] items-center justify-center text-sm text-muted-foreground">
-                  Khong co du lieu
+                  No data available
                 </div>
               )}
             </ErrorBoundary>
@@ -223,7 +223,7 @@ export default function Overview() {
         {/* 2. Monthly Trend line chart (revenue, cogs, opex, net) */}
         <Card>
           <CardHeader>
-            <CardTitle>Xu huong hang thang</CardTitle>
+            <CardTitle>Monthly Trend</CardTitle>
           </CardHeader>
           <CardContent>
             <ErrorBoundary name="LineChart">
@@ -234,26 +234,26 @@ export default function Overview() {
                   lines={[
                     {
                       key: "revenue",
-                      name: "Doanh thu",
+                      name: "Revenue",
                       color: CHART_COLORS.green,
                     },
-                    { key: "cogs", name: "Gia von", color: CHART_COLORS.orange },
+                    { key: "cogs", name: "COGS", color: CHART_COLORS.orange },
                     {
                       key: "opex",
-                      name: "Chi phi van hanh",
+                      name: "Operating Expenses",
                       color: CHART_COLORS.red,
                     },
                     {
                       key: "net",
-                      name: "Loi nhuan rong",
+                      name: "Net Profit",
                       color: CHART_COLORS.blue,
                     },
                   ]}
-                  formatValue={vndFormatter}
+                  formatValue={usdFormatter}
                 />
               ) : (
                 <div className="flex h-[350px] items-center justify-center text-sm text-muted-foreground">
-                  Khong co du lieu
+                  No data available
                 </div>
               )}
             </ErrorBoundary>
@@ -263,7 +263,7 @@ export default function Overview() {
         {/* 3. Expense Breakdown donut chart (innerRadius=60) */}
         <Card>
           <CardHeader>
-            <CardTitle>Phan bo chi phi</CardTitle>
+            <CardTitle>Expense Breakdown</CardTitle>
           </CardHeader>
           <CardContent>
             <ErrorBoundary name="PieChart">
@@ -271,11 +271,11 @@ export default function Overview() {
                 <PieChartWidget
                   data={expensePieData}
                   innerRadius={60}
-                  formatValue={vndFormatter}
+                  formatValue={usdFormatter}
                 />
               ) : (
                 <div className="flex h-[350px] items-center justify-center text-sm text-muted-foreground">
-                  Khong co du lieu chi phi
+                  No expense data
                 </div>
               )}
             </ErrorBoundary>
@@ -285,15 +285,15 @@ export default function Overview() {
         {/* 4. Runway Gauge (cash / burn_rate) */}
         <Card>
           <CardHeader>
-            <CardTitle>Runway du kien</CardTitle>
+            <CardTitle>Estimated Runway</CardTitle>
           </CardHeader>
           <CardContent className="flex items-center justify-center">
             <ErrorBoundary name="GaugeChart">
               <GaugeChart
                 value={runwayMonths}
                 max={24}
-                label="Runway con lai"
-                unit="thang"
+                label="Remaining Runway"
+                unit="months"
                 color={
                   runwayMonths > 12
                     ? CHART_COLORS.green

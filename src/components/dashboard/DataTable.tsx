@@ -88,7 +88,7 @@ export default function DataTable<T extends Record<string, unknown>>({
   columns,
   data,
   loading = false,
-  emptyMessage = "Khong co du lieu",
+  emptyMessage = "No data available",
   onRowClick,
 }: DataTableProps<T>) {
   const [sort, setSort] = useState<SortState | null>(null);
@@ -122,7 +122,7 @@ export default function DataTable<T extends Record<string, unknown>>({
       if (typeof aVal === "number" && typeof bVal === "number") {
         comparison = aVal - bVal;
       } else {
-        comparison = String(aVal).localeCompare(String(bVal), "vi");
+        comparison = String(aVal).localeCompare(String(bVal), "en");
       }
 
       return sort.direction === "asc" ? comparison : -comparison;

@@ -52,7 +52,7 @@ export default function DataEntryForm({
     const newErrors: Record<string, string> = {};
     for (const field of fields) {
       if (field.required && !values[field.name]?.trim()) {
-        newErrors[field.name] = `${field.label} la bat buoc`;
+        newErrors[field.name] = `${field.label} is required`;
       }
     }
     setErrors(newErrors);
@@ -115,7 +115,7 @@ export default function DataEntryForm({
                   className={cn(hasError && "border-destructive")}
                 >
                   <option value="">
-                    {field.placeholder ?? `Chon ${field.label.toLowerCase()}`}
+                    {field.placeholder ?? `Select ${field.label.toLowerCase()}`}
                   </option>
                   {field.options?.map((opt) => (
                     <option key={opt.value} value={opt.value}>
@@ -158,10 +158,10 @@ export default function DataEntryForm({
           {submitting ? (
             <span className="flex items-center gap-2">
               <span className="h-4 w-4 animate-spin rounded-full border-2 border-primary-foreground border-t-transparent" />
-              Dang luu...
+              Saving...
             </span>
           ) : (
-            "Luu"
+            "Save"
           )}
         </Button>
 
@@ -171,7 +171,7 @@ export default function DataEntryForm({
           onClick={handleReset}
           disabled={submitting}
         >
-          Dat lai
+          Reset
         </Button>
       </div>
     </form>

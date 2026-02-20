@@ -76,7 +76,7 @@ export default function DataEntry() {
         created_at: new Date().toISOString(),
       });
       refetchAccounts();
-      showSuccess("Tai khoan da duoc tao thanh cong!");
+      showSuccess("Account created successfully!");
     },
     [createAccount, refetchAccounts, showSuccess]
   );
@@ -98,7 +98,7 @@ export default function DataEntry() {
         updated_at: new Date().toISOString(),
       });
       refetchLedger();
-      showSuccess("But toan so cai da duoc tao thanh cong!");
+      showSuccess("Ledger entry created successfully!");
     },
     [createEntry, refetchLedger, showSuccess]
   );
@@ -119,13 +119,13 @@ export default function DataEntry() {
         updated_at: new Date().toISOString(),
       });
       refetchKPI();
-      showSuccess("Chi so KPI da duoc tao thanh cong!");
+      showSuccess("KPI metric created successfully!");
     },
     [createKPI, refetchKPI, showSuccess]
   );
 
   return (
-    <PageContainer title="Nhap lieu" description="Them va chinh sua du lieu">
+    <PageContainer title="Data Entry" description="Add and edit data">
       <div className="space-y-6">
         {/* Success Toast */}
         {successMessage && (
@@ -139,11 +139,11 @@ export default function DataEntry() {
           <TabsList>
             <TabsTrigger value="accounts">
               <Database className="mr-1.5 h-4 w-4" />
-              Tai khoan
+              Accounts
             </TabsTrigger>
             <TabsTrigger value="ledger">
               <BookOpen className="mr-1.5 h-4 w-4" />
-              So cai
+              Ledger
             </TabsTrigger>
             <TabsTrigger value="kpi">
               <BarChart3 className="mr-1.5 h-4 w-4" />
@@ -151,91 +151,91 @@ export default function DataEntry() {
             </TabsTrigger>
           </TabsList>
 
-          {/* Tab 1: Tai khoan (Accounts) */}
+          {/* Tab 1: Accounts */}
           <TabsContent value="accounts">
             <DataEntryForm
-              title="Tao tai khoan moi"
+              title="Create New Account"
               fields={[
                 {
                   name: "code",
-                  label: "Ma tai khoan",
+                  label: "Account Code",
                   type: "text",
                   required: true,
-                  placeholder: "VD: ACC-001",
+                  placeholder: "e.g. ACC-001",
                 },
                 {
                   name: "name",
-                  label: "Ten tai khoan",
+                  label: "Account Name",
                   type: "text",
                   required: true,
-                  placeholder: "VD: Chi phi van phong",
+                  placeholder: "e.g. Office Expenses",
                 },
                 {
                   name: "category_id",
-                  label: "Danh muc",
+                  label: "Category",
                   type: "select",
                   required: true,
                   options: categoryOptions,
                 },
                 {
                   name: "subcategory",
-                  label: "Phan loai phu",
+                  label: "Subcategory",
                   type: "text",
-                  placeholder: "VD: Dien nuoc",
+                  placeholder: "e.g. Utilities",
                 },
                 {
                   name: "notes",
-                  label: "Ghi chu",
+                  label: "Notes",
                   type: "textarea",
-                  placeholder: "Ghi chu them ve tai khoan nay...",
+                  placeholder: "Additional notes about this account...",
                 },
               ]}
               onSubmit={handleCreateAccount}
             />
           </TabsContent>
 
-          {/* Tab 2: So cai (Ledger) */}
+          {/* Tab 2: Ledger */}
           <TabsContent value="ledger">
             <DataEntryForm
-              title="Tao but toan so cai"
+              title="Create Ledger Entry"
               fields={[
                 {
                   name: "account_id",
-                  label: "Tai khoan",
+                  label: "Account",
                   type: "select",
                   required: true,
                   options: accountOptions,
                 },
                 {
                   name: "period",
-                  label: "Ky",
+                  label: "Period",
                   type: "text",
                   required: true,
                   placeholder: "2026-02",
                 },
                 {
                   name: "budget",
-                  label: "Ngan sach",
+                  label: "Budget",
                   type: "number",
                   placeholder: "0",
                 },
                 {
                   name: "actual",
-                  label: "Thuc te",
+                  label: "Actual",
                   type: "number",
                   placeholder: "0",
                 },
                 {
                   name: "status",
-                  label: "Trang thai",
+                  label: "Status",
                   type: "select",
                   options: ledgerStatusOptions,
                 },
                 {
                   name: "notes",
-                  label: "Ghi chu",
+                  label: "Notes",
                   type: "textarea",
-                  placeholder: "Ghi chu them...",
+                  placeholder: "Additional notes...",
                 },
               ]}
               onSubmit={handleCreateLedger}
@@ -245,50 +245,50 @@ export default function DataEntry() {
           {/* Tab 3: KPI */}
           <TabsContent value="kpi">
             <DataEntryForm
-              title="Tao chi so KPI"
+              title="Create KPI Metric"
               fields={[
                 {
                   name: "name",
-                  label: "Ten KPI",
+                  label: "KPI Name",
                   type: "text",
                   required: true,
-                  placeholder: "VD: Doanh thu thang",
+                  placeholder: "e.g. Monthly Revenue",
                 },
                 {
                   name: "group_name",
-                  label: "Nhom",
+                  label: "Group",
                   type: "select",
                   options: KPI_GROUP_OPTIONS,
                 },
                 {
                   name: "unit",
-                  label: "Don vi",
+                  label: "Unit",
                   type: "text",
-                  placeholder: "VD: VND, %, users",
+                  placeholder: "e.g. USD, %, users",
                 },
                 {
                   name: "target_value",
-                  label: "Muc tieu",
+                  label: "Target",
                   type: "number",
                   placeholder: "0",
                 },
                 {
                   name: "current_value",
-                  label: "Gia tri hien tai",
+                  label: "Current Value",
                   type: "number",
                   placeholder: "0",
                 },
                 {
                   name: "period",
-                  label: "Ky",
+                  label: "Period",
                   type: "text",
                   placeholder: "2026-02",
                 },
                 {
                   name: "notes",
-                  label: "Ghi chu",
+                  label: "Notes",
                   type: "textarea",
-                  placeholder: "Ghi chu them...",
+                  placeholder: "Additional notes...",
                 },
               ]}
               onSubmit={handleCreateKPI}

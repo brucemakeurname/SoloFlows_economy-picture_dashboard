@@ -5,10 +5,10 @@ import { FilterContext } from "@/App";
 import type { Category } from "@/lib/types";
 
 const STATUS_OPTIONS = [
-  { value: "", label: "Tat ca" },
-  { value: "forecast", label: "Du bao" },
-  { value: "actual", label: "Thuc te" },
-  { value: "closed", label: "Da dong" },
+  { value: "", label: "All" },
+  { value: "forecast", label: "Forecast" },
+  { value: "actual", label: "Actual" },
+  { value: "closed", label: "Closed" },
 ] as const;
 
 export function FilterBar() {
@@ -36,7 +36,7 @@ export function FilterBar() {
     <div className="flex flex-wrap items-center gap-4 rounded-lg border border-border bg-card p-3">
       <div className="flex items-center gap-2">
         <label htmlFor="filter-status" className="text-xs font-medium text-muted-foreground">
-          Trang thai
+          Status
         </label>
         <select
           id="filter-status"
@@ -51,7 +51,7 @@ export function FilterBar() {
       </div>
 
       <div className="flex items-center gap-2">
-        <span className="text-xs font-medium text-muted-foreground">Loai</span>
+        <span className="text-xs font-medium text-muted-foreground">Type</span>
         <div className="flex flex-wrap items-center gap-2">
           {categories.map((cat) => {
             const isSelected = filters.categories.includes(cat.type);

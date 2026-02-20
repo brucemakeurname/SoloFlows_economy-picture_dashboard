@@ -59,7 +59,7 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
           )}
           aria-label="Select period"
         >
-          <option value="">Tat ca</option>
+          <option value="">All periods</option>
           {(periods ?? []).map((p) => (
             <option key={p.code} value={p.code}>
               {p.label}
