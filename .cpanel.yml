@@ -1,8 +1,4 @@
 ---
 deployment:
   tasks:
-    - export DEPLOYPATH=/home/l5v17l38yo4h/public_html/economy/
-    - /bin/mkdir -p $DEPLOYPATH
-    - /bin/mkdir -p $DEPLOYPATH/api
-    - /bin/cp -R dist/* $DEPLOYPATH
-    - /bin/cp -R api/* $DEPLOYPATH/api/
+    - /bin/echo "Deployed to anhcu.art"

@@ -1,0 +1,13 @@
+RewriteEngine On
+
+# Let API requests pass through to PHP
+RewriteRule ^api/ - [L]
+
+# Serve static assets from dist/
+RewriteRule ^assets/(.*)$ dist/assets/$1 [L]
+
+# Serve dist/index.html for root and all SPA routes
+RewriteCond %{REQUEST_URI} !^/dist/
+RewriteCond %{REQUEST_URI} !^/api/
+RewriteCond %{REQUEST_URI} !^/database/
+RewriteRule ^.*$ dist/index.html [L]
