@@ -5,6 +5,7 @@ import DataTable from "@/components/dashboard/DataTable";
 import EditableCell from "@/components/dashboard/EditableCell";
 import BarChartWidget from "@/components/charts/BarChartWidget";
 import AreaChartWidget from "@/components/charts/AreaChartWidget";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { useLedger } from "@/hooks/useLedger";
@@ -15,6 +16,12 @@ import type { LedgerEntry } from "@/lib/types";
 /* -------------------------------------------------------------------------- */
 /*  Helpers                                                                    */
 /* -------------------------------------------------------------------------- */
+
+/** Safely coerce any value to a finite number (0 fallback). */
+function num(v: unknown): number {
+  const n = Number(v);
+  return Number.isFinite(n) ? n : 0;
+}
 
 const vndFormatter = (v: number) => formatCurrency(v, "VND");
 
@@ -159,8 +166,8 @@ export default function CashFlow() {
   const barChartData = useMemo(() => {
     return entries.map((entry) => ({
       name: entry.account_name ?? entry.account_code ?? `#${entry.account_id}`,
-      budget: entry.budget,
-      actual: entry.actual,
+      budget: num(entry.budget),
+      actual: num(entry.actual),
     }));
   }, [entries]);
 
@@ -171,8 +178,10 @@ export default function CashFlow() {
 
     return entries.map((entry) => {
       const isRevenue = entry.category_type === "revenue";
-      const budgetDelta = isRevenue ? entry.budget : -entry.budget;
-      const actualDelta = isRevenue ? entry.actual : -entry.actual;
+      const budget = num(entry.budget);
+      const actual = num(entry.actual);
+      const budgetDelta = isRevenue ? budget : -budget;
+      const actualDelta = isRevenue ? actual : -actual;
 
       cumulativeBudget += budgetDelta;
       cumulativeActual += actualDelta;
@@ -190,8 +199,8 @@ export default function CashFlow() {
   const varianceSummary = useMemo(() => {
     const total = entries.reduce(
       (acc, e) => {
-        acc.budget += e.budget;
-        acc.actual += e.actual;
+        acc.budget += num(e.budget);
+        acc.actual += num(e.actual);
         return acc;
       },
       { budget: 0, actual: 0 }
@@ -277,29 +286,31 @@ export default function CashFlow() {
             <CardTitle>Ngan sach vs Thuc te</CardTitle>
           </CardHeader>
           <CardContent>
-            {barChartData.length > 0 ? (
-              <BarChartWidget
-                data={barChartData}
-                xKey="name"
-                bars={[
-                  {
-                    key: "budget",
-                    name: "Ngan sach",
-                    color: CHART_COLORS.blue,
-                  },
-                  {
-                    key: "actual",
-                    name: "Thuc te",
-                    color: CHART_COLORS.orange,
-                  },
-                ]}
-                formatValue={vndFormatter}
-              />
-            ) : (
-              <div className="flex h-[350px] items-center justify-center text-sm text-muted-foreground">
-                Khong co du lieu
-              </div>
-            )}
+            <ErrorBoundary name="BarChart">
+              {barChartData.length > 0 ? (
+                <BarChartWidget
+                  data={barChartData}
+                  xKey="name"
+                  bars={[
+                    {
+                      key: "budget",
+                      name: "Ngan sach",
+                      color: CHART_COLORS.blue,
+                    },
+                    {
+                      key: "actual",
+                      name: "Thuc te",
+                      color: CHART_COLORS.orange,
+                    },
+                  ]}
+                  formatValue={vndFormatter}
+                />
+              ) : (
+                <div className="flex h-[350px] items-center justify-center text-sm text-muted-foreground">
+                  Khong co du lieu
+                </div>
+              )}
+            </ErrorBoundary>
           </CardContent>
         </Card>
 
@@ -309,29 +320,31 @@ export default function CashFlow() {
             <CardTitle>So du luy ke</CardTitle>
           </CardHeader>
           <CardContent>
-            {runningBalanceData.length > 0 ? (
-              <AreaChartWidget
-                data={runningBalanceData}
-                xKey="name"
-                areas={[
-                  {
-                    key: "budget_balance",
-                    name: "So du ngan sach",
-                    color: CHART_COLORS.blue,
-                  },
-                  {
-                    key: "actual_balance",
-                    name: "So du thuc te",
-                    color: CHART_COLORS.green,
-                  },
-                ]}
-                formatValue={vndFormatter}
-              />
-            ) : (
-              <div className="flex h-[350px] items-center justify-center text-sm text-muted-foreground">
-                Khong co du lieu
-              </div>
-            )}
+            <ErrorBoundary name="AreaChart">
+              {runningBalanceData.length > 0 ? (
+                <AreaChartWidget
+                  data={runningBalanceData}
+                  xKey="name"
+                  areas={[
+                    {
+                      key: "budget_balance",
+                      name: "So du ngan sach",
+                      color: CHART_COLORS.blue,
+                    },
+                    {
+                      key: "actual_balance",
+                      name: "So du thuc te",
+                      color: CHART_COLORS.green,
+                    },
+                  ]}
+                  formatValue={vndFormatter}
+                />
+              ) : (
+                <div className="flex h-[350px] items-center justify-center text-sm text-muted-foreground">
+                  Khong co du lieu
+                </div>
+              )}
+            </ErrorBoundary>
           </CardContent>
         </Card>
       </div>

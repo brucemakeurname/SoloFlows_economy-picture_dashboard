@@ -6,6 +6,7 @@ import KPICard from "@/components/dashboard/KPICard";
 import BarChartWidget from "@/components/charts/BarChartWidget";
 import LineChartWidget from "@/components/charts/LineChartWidget";
 import PieChartWidget from "@/components/charts/PieChartWidget";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/Card";
 import { useApi } from "@/hooks/useApi";
 import { useLedger } from "@/hooks/useLedger";
@@ -44,6 +45,12 @@ const CHANNEL_COLORS = [
   CHART_COLORS.primary,
   CHART_COLORS.accent,
 ];
+
+/** Safely coerce any value to a finite number (0 fallback). */
+function num(v: unknown): number {
+  const n = Number(v);
+  return Number.isFinite(n) ? n : 0;
+}
 
 const vndFormatter = (v: number) => formatCurrency(v, "VND");
 
@@ -96,7 +103,7 @@ export default function Revenue() {
         grouped[accountName] = {};
       }
       grouped[accountName][sub] =
-        (grouped[accountName][sub] ?? 0) + entry.actual;
+        (grouped[accountName][sub] ?? 0) + num(entry.actual);
     });
 
     const data = Object.entries(grouped).map(([name, subs]) => ({
@@ -109,33 +116,35 @@ export default function Revenue() {
 
   /* ---- Monthly Revenue Trend line chart (from summary.revenue_by_period) ---- */
   const monthlyRevenueTrend = useMemo(() => {
-    if (!summary?.revenue_by_period) return [];
+    if (!summary?.revenue_by_period || !Array.isArray(summary.revenue_by_period))
+      return [];
     return summary.revenue_by_period.map((item) => ({
-      label: periodToLabel(item.period),
-      amount: item.amount,
+      label: periodToLabel(String(item.period ?? "")),
+      amount: num(item.amount),
     }));
   }, [summary]);
 
   /* ---- Revenue Mix pie chart (from summary.revenue_by_subcategory) ---- */
   const revenueMixData = useMemo(() => {
-    if (!summary?.revenue_by_subcategory) return [];
+    if (!summary?.revenue_by_subcategory || !Array.isArray(summary.revenue_by_subcategory))
+      return [];
     return summary.revenue_by_subcategory.map((item, index) => ({
-      name: item.name,
-      value: item.amount,
+      name: String(item.name ?? ""),
+      value: num(item.amount),
       color: CHANNEL_COLORS[index % CHANNEL_COLORS.length],
     }));
   }, [summary]);
 
   /* ---- Growth rate calculation (current vs previous period) ---- */
   const growthRate = useMemo(() => {
-    if (!summary?.revenue_by_period || summary.revenue_by_period.length < 2) {
+    if (!summary?.revenue_by_period || !Array.isArray(summary.revenue_by_period) || summary.revenue_by_period.length < 2) {
       return 0;
     }
     const sorted = [...summary.revenue_by_period].sort((a, b) =>
-      a.period.localeCompare(b.period)
+      String(a.period).localeCompare(String(b.period))
     );
-    const current = sorted[sorted.length - 1].amount;
-    const previous = sorted[sorted.length - 2].amount;
+    const current = num(sorted[sorted.length - 1].amount);
+    const previous = num(sorted[sorted.length - 2].amount);
 
     if (previous === 0) return current > 0 ? 100 : 0;
     return ((current - previous) / previous) * 100;
@@ -188,24 +197,26 @@ export default function Revenue() {
             <CardTitle>Doanh thu theo kenh</CardTitle>
           </CardHeader>
           <CardContent>
-            {revenueByChannel.data.length > 0 ? (
-              <BarChartWidget
-                data={revenueByChannel.data}
-                xKey="name"
-                bars={revenueByChannel.subcategories.map((sub, index) => ({
-                  key: sub,
-                  color: CHANNEL_COLORS[index % CHANNEL_COLORS.length],
-                  name: sub,
-                }))}
-                height={350}
-                stacked
-                formatValue={vndFormatter}
-              />
-            ) : (
-              <div className="flex h-[350px] items-center justify-center text-sm text-muted-foreground">
-                Khong co du lieu doanh thu
-              </div>
-            )}
+            <ErrorBoundary name="BarChart">
+              {revenueByChannel.data.length > 0 ? (
+                <BarChartWidget
+                  data={revenueByChannel.data}
+                  xKey="name"
+                  bars={revenueByChannel.subcategories.map((sub, index) => ({
+                    key: sub,
+                    color: CHANNEL_COLORS[index % CHANNEL_COLORS.length],
+                    name: sub,
+                  }))}
+                  height={350}
+                  stacked
+                  formatValue={vndFormatter}
+                />
+              ) : (
+                <div className="flex h-[350px] items-center justify-center text-sm text-muted-foreground">
+                  Khong co du lieu doanh thu
+                </div>
+              )}
+            </ErrorBoundary>
           </CardContent>
         </Card>
 
@@ -215,25 +226,27 @@ export default function Revenue() {
             <CardTitle>Xu huong doanh thu hang thang</CardTitle>
           </CardHeader>
           <CardContent>
-            {monthlyRevenueTrend.length > 0 ? (
-              <LineChartWidget
-                data={monthlyRevenueTrend}
-                xKey="label"
-                lines={[
-                  {
-                    key: "amount",
-                    color: CHART_COLORS.green,
-                    name: "Doanh thu",
-                  },
-                ]}
-                height={350}
-                formatValue={vndFormatter}
-              />
-            ) : (
-              <div className="flex h-[350px] items-center justify-center text-sm text-muted-foreground">
-                Khong co du lieu xu huong
-              </div>
-            )}
+            <ErrorBoundary name="LineChart">
+              {monthlyRevenueTrend.length > 0 ? (
+                <LineChartWidget
+                  data={monthlyRevenueTrend}
+                  xKey="label"
+                  lines={[
+                    {
+                      key: "amount",
+                      color: CHART_COLORS.green,
+                      name: "Doanh thu",
+                    },
+                  ]}
+                  height={350}
+                  formatValue={vndFormatter}
+                />
+              ) : (
+                <div className="flex h-[350px] items-center justify-center text-sm text-muted-foreground">
+                  Khong co du lieu xu huong
+                </div>
+              )}
+            </ErrorBoundary>
           </CardContent>
         </Card>
 
@@ -243,17 +256,19 @@ export default function Revenue() {
             <CardTitle>Co cau doanh thu</CardTitle>
           </CardHeader>
           <CardContent>
-            {revenueMixData.length > 0 ? (
-              <PieChartWidget
-                data={revenueMixData}
-                height={350}
-                formatValue={vndFormatter}
-              />
-            ) : (
-              <div className="flex h-[350px] items-center justify-center text-sm text-muted-foreground">
-                Khong co du lieu co cau
-              </div>
-            )}
+            <ErrorBoundary name="PieChart">
+              {revenueMixData.length > 0 ? (
+                <PieChartWidget
+                  data={revenueMixData}
+                  height={350}
+                  formatValue={vndFormatter}
+                />
+              ) : (
+                <div className="flex h-[350px] items-center justify-center text-sm text-muted-foreground">
+                  Khong co du lieu co cau
+                </div>
+              )}
+            </ErrorBoundary>
           </CardContent>
         </Card>
 

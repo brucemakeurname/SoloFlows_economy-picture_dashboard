@@ -3,12 +3,19 @@ import { TrendingDown, DollarSign, ArrowDownRight, BarChart3 } from "lucide-reac
 import PageContainer from "@/components/layout/PageContainer";
 import BarChartWidget from "@/components/charts/BarChartWidget";
 import LineChartWidget from "@/components/charts/LineChartWidget";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/Card";
 import { useApi } from "@/hooks/useApi";
 import { formatCurrency } from "@/lib/utils";
 import { CHART_COLORS } from "@/lib/constants";
 import { FilterContext } from "@/App";
 import type { DashboardSummary } from "@/lib/types";
+
+/** Safely coerce any value to a finite number (0 fallback). */
+function num(v: unknown): number {
+  const n = Number(v);
+  return Number.isFinite(n) ? n : 0;
+}
 
 const COLOR_LIST = [
   CHART_COLORS.red,
@@ -27,11 +34,12 @@ export default function Expenses() {
   const { data: summary, loading, error } = useApi<DashboardSummary>(endpoint);
 
   const expenseBreakdown = useMemo(() => {
-    if (!summary?.expense_by_category) return [];
+    if (!summary?.expense_by_category || !Array.isArray(summary.expense_by_category))
+      return [];
     return summary.expense_by_category
       .map((item, index) => ({
-        name: item.name,
-        amount: item.amount,
+        name: String(item.name ?? ""),
+        amount: num(item.amount),
         color: item.color || COLOR_LIST[index % COLOR_LIST.length],
       }))
       .sort((a, b) => b.amount - a.amount);
@@ -42,18 +50,18 @@ export default function Expenses() {
   const cogsVsOpex = useMemo(() => {
     if (!summary) return [];
     return [
-      { category: "COGS", amount: summary.total_cogs, color: CHART_COLORS.orange },
-      { category: "OpEx", amount: summary.total_opex, color: CHART_COLORS.red },
+      { category: "COGS", amount: num(summary.total_cogs), color: CHART_COLORS.orange },
+      { category: "OpEx", amount: num(summary.total_opex), color: CHART_COLORS.red },
     ];
   }, [summary]);
 
   const costTrend = useMemo(() => {
-    if (!summary?.monthly_trend) return [];
+    if (!summary?.monthly_trend || !Array.isArray(summary.monthly_trend)) return [];
     return summary.monthly_trend.map((item) => ({
-      period: item.period,
-      cogs: item.cogs,
-      opex: item.opex,
-      total: item.cogs + item.opex,
+      period: String(item.period ?? ""),
+      cogs: num(item.cogs),
+      opex: num(item.opex),
+      total: num(item.cogs) + num(item.opex),
     }));
   }, [summary?.monthly_trend]);
 
@@ -87,14 +95,16 @@ export default function Expenses() {
                 Khong co du lieu chi phi
               </div>
             ) : (
-              <BarChartWidget
-                data={expenseBreakdown}
-                xKey="name"
-                bars={[{ key: "amount", color: CHART_COLORS.red, name: "So tien" }]}
-                horizontal
-                height={350}
-                formatValue={(v) => formatCurrency(v)}
-              />
+              <ErrorBoundary name="ExpenseBar">
+                <BarChartWidget
+                  data={expenseBreakdown}
+                  xKey="name"
+                  bars={[{ key: "amount", color: CHART_COLORS.red, name: "So tien" }]}
+                  horizontal
+                  height={350}
+                  formatValue={(v) => formatCurrency(v)}
+                />
+              </ErrorBoundary>
             )}
           </CardContent>
         </Card>
@@ -152,13 +162,15 @@ export default function Expenses() {
                   <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
                 </div>
               ) : (
-                <BarChartWidget
-                  data={cogsVsOpex}
-                  xKey="category"
-                  bars={[{ key: "amount", color: CHART_COLORS.purple, name: "So tien" }]}
-                  height={350}
-                  formatValue={(v) => formatCurrency(v)}
-                />
+                <ErrorBoundary name="COGSvsOpEx">
+                  <BarChartWidget
+                    data={cogsVsOpex}
+                    xKey="category"
+                    bars={[{ key: "amount", color: CHART_COLORS.purple, name: "So tien" }]}
+                    height={350}
+                    formatValue={(v) => formatCurrency(v)}
+                  />
+                </ErrorBoundary>
               )}
             </CardContent>
           </Card>
@@ -180,17 +192,19 @@ export default function Expenses() {
                   Khong co du lieu xu huong
                 </div>
               ) : (
-                <LineChartWidget
-                  data={costTrend}
-                  xKey="period"
-                  lines={[
-                    { key: "cogs", color: CHART_COLORS.orange, name: "COGS" },
-                    { key: "opex", color: CHART_COLORS.red, name: "OpEx" },
-                    { key: "total", color: CHART_COLORS.muted, name: "Tong" },
-                  ]}
-                  height={350}
-                  formatValue={(v) => formatCurrency(v)}
-                />
+                <ErrorBoundary name="CostTrend">
+                  <LineChartWidget
+                    data={costTrend}
+                    xKey="period"
+                    lines={[
+                      { key: "cogs", color: CHART_COLORS.orange, name: "COGS" },
+                      { key: "opex", color: CHART_COLORS.red, name: "OpEx" },
+                      { key: "total", color: CHART_COLORS.muted, name: "Tong" },
+                    ]}
+                    height={350}
+                    formatValue={(v) => formatCurrency(v)}
+                  />
+                </ErrorBoundary>
               )}
             </CardContent>
           </Card>

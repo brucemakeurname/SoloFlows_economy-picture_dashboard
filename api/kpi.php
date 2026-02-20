@@ -54,6 +54,14 @@ switch ($method) {
         $stmt->execute($params);
         $metrics = $stmt->fetchAll();
 
+        // Cast DECIMAL string values to proper types
+        $metrics = array_map(function ($row) {
+            $row['id']            = (int) $row['id'];
+            $row['target_value']  = $row['target_value'] !== null ? (float) $row['target_value'] : null;
+            $row['current_value'] = (float) $row['current_value'];
+            return $row;
+        }, $metrics);
+
         jsonResponse($metrics);
         break;
 

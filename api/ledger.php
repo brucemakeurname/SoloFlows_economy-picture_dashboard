@@ -67,6 +67,17 @@ switch ($method) {
         $stmt->execute($params);
         $entries = $stmt->fetchAll();
 
+        // Cast DECIMAL string values to float for JavaScript consumption
+        $entries = array_map(function ($row) {
+            $row['id']          = (int) $row['id'];
+            $row['account_id']  = (int) $row['account_id'];
+            $row['category_id'] = (int) $row['category_id'];
+            $row['budget']      = (float) $row['budget'];
+            $row['actual']      = (float) $row['actual'];
+            $row['variance']    = (float) $row['variance'];
+            return $row;
+        }, $entries);
+
         jsonResponse($entries);
         break;
 
