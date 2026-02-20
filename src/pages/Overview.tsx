@@ -7,6 +7,7 @@ import BarChartWidget from "@/components/charts/BarChartWidget";
 import LineChartWidget from "@/components/charts/LineChartWidget";
 import PieChartWidget from "@/components/charts/PieChartWidget";
 import GaugeChart from "@/components/charts/GaugeChart";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/Card";
 import { useApi } from "@/hooks/useApi";
 import { formatCurrency, periodToLabel } from "@/lib/utils";
@@ -48,6 +49,12 @@ function SkeletonChart() {
 /*  Helpers                                                                    */
 /* -------------------------------------------------------------------------- */
 
+/** Safely coerce any value to a finite number (0 fallback). */
+function num(v: unknown): number {
+  const n = Number(v);
+  return Number.isFinite(n) ? n : 0;
+}
+
 const vndFormatter = (v: number) => formatCurrency(v, "VND");
 
 /* -------------------------------------------------------------------------- */
@@ -64,43 +71,48 @@ export default function Overview() {
 
   /* ---- Revenue vs Expenses grouped bar chart data ---- */
   const revenueVsExpenseData = useMemo(() => {
-    if (!data?.monthly_trend) return [];
+    if (!data?.monthly_trend || !Array.isArray(data.monthly_trend)) return [];
     return data.monthly_trend.map((m) => ({
-      period: periodToLabel(m.period),
-      revenue: m.revenue,
-      opex: m.opex,
+      period: periodToLabel(String(m.period ?? "")),
+      revenue: num(m.revenue),
+      opex: num(m.opex),
     }));
   }, [data]);
 
   /* ---- Monthly trend line chart data (revenue, cogs, opex, net) ---- */
   const trendData = useMemo(() => {
-    if (!data?.monthly_trend) return [];
+    if (!data?.monthly_trend || !Array.isArray(data.monthly_trend)) return [];
     return data.monthly_trend.map((m) => ({
-      ...m,
-      period: periodToLabel(m.period),
+      period: periodToLabel(String(m.period ?? "")),
+      revenue: num(m.revenue),
+      cogs: num(m.cogs),
+      opex: num(m.opex),
+      net: num(m.net),
     }));
   }, [data]);
 
   /* ---- Expense breakdown pie/donut data ---- */
   const expensePieData = useMemo(() => {
-    if (!data?.expense_by_category) return [];
+    if (!data?.expense_by_category || !Array.isArray(data.expense_by_category))
+      return [];
     return data.expense_by_category.map((item) => ({
-      name: item.name,
-      value: item.amount,
+      name: String(item.name ?? ""),
+      value: num(item.amount),
       color:
         item.color ||
-        CATEGORY_COLORS[item.name.toLowerCase()] ||
+        CATEGORY_COLORS[String(item.name ?? "").toLowerCase()] ||
         CHART_COLORS.muted,
     }));
   }, [data]);
 
   /* ---- Runway gauge: cash / burn_rate (months) ---- */
   const runwayMonths = useMemo(() => {
-    if (!data || data.burn_rate <= 0) return 0;
-    // Cash approximated as total_revenue - total_cogs - total_opex
-    const cash = data.total_revenue - data.total_cogs - data.total_opex;
+    if (!data) return 0;
+    const burnRate = num(data.burn_rate);
+    if (burnRate <= 0) return 0;
+    const cash = num(data.total_revenue) - num(data.total_cogs) - num(data.total_opex);
     if (cash <= 0) return 0;
-    return Math.round(cash / data.burn_rate);
+    return Math.round(cash / burnRate);
   }, [data]);
 
   /* ---- Loading state ---- */
@@ -125,11 +137,14 @@ export default function Overview() {
   }
 
   /* ---- Derived KPI values ---- */
-  const totalExpenses = data.total_cogs + data.total_opex;
+  const totalRevenue = num(data.total_revenue);
+  const totalCogs = num(data.total_cogs);
+  const totalOpex = num(data.total_opex);
+  const netProfit = num(data.net_profit);
+  const burnRate = num(data.burn_rate);
+  const totalExpenses = totalCogs + totalOpex;
   const profitMargin =
-    data.total_revenue > 0
-      ? (data.net_profit / data.total_revenue) * 100
-      : 0;
+    totalRevenue > 0 ? (netProfit / totalRevenue) * 100 : 0;
 
   return (
     <PageContainer
@@ -140,31 +155,31 @@ export default function Overview() {
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <KPICard
           title="Tong Doanh thu"
-          value={formatCurrency(data.total_revenue)}
+          value={formatCurrency(totalRevenue)}
           icon={<DollarSign className="h-6 w-6" />}
-          trend={data.total_revenue > 0 ? "up" : "flat"}
-          change={data.total_revenue > 0 ? profitMargin : undefined}
+          trend={totalRevenue > 0 ? "up" : "flat"}
+          change={totalRevenue > 0 ? profitMargin : undefined}
           changeLabel="margin"
         />
         <KPICard
           title="Tong Chi phi"
           value={formatCurrency(totalExpenses)}
           icon={<CreditCard className="h-6 w-6" />}
-          trend={totalExpenses > data.total_revenue ? "up" : "down"}
+          trend={totalExpenses > totalRevenue ? "up" : "down"}
         />
         <KPICard
           title="Loi nhuan rong"
-          value={formatCurrency(data.net_profit)}
+          value={formatCurrency(netProfit)}
           icon={<TrendingUp className="h-6 w-6" />}
           change={profitMargin}
           changeLabel="ty suat"
-          trend={data.net_profit >= 0 ? "up" : "down"}
+          trend={netProfit >= 0 ? "up" : "down"}
         />
         <KPICard
           title="Burn Rate"
-          value={formatCurrency(data.burn_rate)}
+          value={formatCurrency(burnRate)}
           icon={<Flame className="h-6 w-6" />}
-          trend={data.burn_rate > 0 ? "down" : "flat"}
+          trend={burnRate > 0 ? "down" : "flat"}
           changeLabel="/ thang"
         />
       </div>
@@ -177,23 +192,31 @@ export default function Overview() {
             <CardTitle>Doanh thu vs Chi phi</CardTitle>
           </CardHeader>
           <CardContent>
-            <BarChartWidget
-              data={revenueVsExpenseData}
-              xKey="period"
-              bars={[
-                {
-                  key: "revenue",
-                  name: "Doanh thu",
-                  color: CHART_COLORS.green,
-                },
-                {
-                  key: "opex",
-                  name: "Chi phi van hanh",
-                  color: CHART_COLORS.red,
-                },
-              ]}
-              formatValue={vndFormatter}
-            />
+            <ErrorBoundary name="BarChart">
+              {revenueVsExpenseData.length > 0 ? (
+                <BarChartWidget
+                  data={revenueVsExpenseData}
+                  xKey="period"
+                  bars={[
+                    {
+                      key: "revenue",
+                      name: "Doanh thu",
+                      color: CHART_COLORS.green,
+                    },
+                    {
+                      key: "opex",
+                      name: "Chi phi van hanh",
+                      color: CHART_COLORS.red,
+                    },
+                  ]}
+                  formatValue={vndFormatter}
+                />
+              ) : (
+                <div className="flex h-[350px] items-center justify-center text-sm text-muted-foreground">
+                  Khong co du lieu
+                </div>
+              )}
+            </ErrorBoundary>
           </CardContent>
         </Card>
 
@@ -203,29 +226,37 @@ export default function Overview() {
             <CardTitle>Xu huong hang thang</CardTitle>
           </CardHeader>
           <CardContent>
-            <LineChartWidget
-              data={trendData}
-              xKey="period"
-              lines={[
-                {
-                  key: "revenue",
-                  name: "Doanh thu",
-                  color: CHART_COLORS.green,
-                },
-                { key: "cogs", name: "Gia von", color: CHART_COLORS.orange },
-                {
-                  key: "opex",
-                  name: "Chi phi van hanh",
-                  color: CHART_COLORS.red,
-                },
-                {
-                  key: "net",
-                  name: "Loi nhuan rong",
-                  color: CHART_COLORS.blue,
-                },
-              ]}
-              formatValue={vndFormatter}
-            />
+            <ErrorBoundary name="LineChart">
+              {trendData.length > 0 ? (
+                <LineChartWidget
+                  data={trendData}
+                  xKey="period"
+                  lines={[
+                    {
+                      key: "revenue",
+                      name: "Doanh thu",
+                      color: CHART_COLORS.green,
+                    },
+                    { key: "cogs", name: "Gia von", color: CHART_COLORS.orange },
+                    {
+                      key: "opex",
+                      name: "Chi phi van hanh",
+                      color: CHART_COLORS.red,
+                    },
+                    {
+                      key: "net",
+                      name: "Loi nhuan rong",
+                      color: CHART_COLORS.blue,
+                    },
+                  ]}
+                  formatValue={vndFormatter}
+                />
+              ) : (
+                <div className="flex h-[350px] items-center justify-center text-sm text-muted-foreground">
+                  Khong co du lieu
+                </div>
+              )}
+            </ErrorBoundary>
           </CardContent>
         </Card>
 
@@ -235,17 +266,19 @@ export default function Overview() {
             <CardTitle>Phan bo chi phi</CardTitle>
           </CardHeader>
           <CardContent>
-            {expensePieData.length > 0 ? (
-              <PieChartWidget
-                data={expensePieData}
-                innerRadius={60}
-                formatValue={vndFormatter}
-              />
-            ) : (
-              <div className="flex h-[350px] items-center justify-center text-sm text-muted-foreground">
-                Khong co du lieu chi phi
-              </div>
-            )}
+            <ErrorBoundary name="PieChart">
+              {expensePieData.length > 0 ? (
+                <PieChartWidget
+                  data={expensePieData}
+                  innerRadius={60}
+                  formatValue={vndFormatter}
+                />
+              ) : (
+                <div className="flex h-[350px] items-center justify-center text-sm text-muted-foreground">
+                  Khong co du lieu chi phi
+                </div>
+              )}
+            </ErrorBoundary>
           </CardContent>
         </Card>
 
@@ -255,20 +288,22 @@ export default function Overview() {
             <CardTitle>Runway du kien</CardTitle>
           </CardHeader>
           <CardContent className="flex items-center justify-center">
-            <GaugeChart
-              value={runwayMonths}
-              max={24}
-              label="Runway con lai"
-              unit="thang"
-              color={
-                runwayMonths > 12
-                  ? CHART_COLORS.green
-                  : runwayMonths > 6
-                    ? CHART_COLORS.warning
-                    : CHART_COLORS.destructive
-              }
-              size={220}
-            />
+            <ErrorBoundary name="GaugeChart">
+              <GaugeChart
+                value={runwayMonths}
+                max={24}
+                label="Runway con lai"
+                unit="thang"
+                color={
+                  runwayMonths > 12
+                    ? CHART_COLORS.green
+                    : runwayMonths > 6
+                      ? CHART_COLORS.warning
+                      : CHART_COLORS.destructive
+                }
+                size={220}
+              />
+            </ErrorBoundary>
           </CardContent>
         </Card>
       </div>

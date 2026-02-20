@@ -43,6 +43,7 @@ export function useApi<T>(
       // Only update state if this request was not aborted
       if (!controller.signal.aborted) {
         if (result.error) {
+          console.error(`[useApi] ${endpoint} →`, result.error);
           setError(result.error);
           setData(null);
         } else {
