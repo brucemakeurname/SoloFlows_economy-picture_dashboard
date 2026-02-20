@@ -1,6 +1,19 @@
 /**
  * Static financial data for Economy Picture Dashboard.
  * Replace with live API calls when real-time tracking is ready.
+ *
+ * NOTE — White screen root cause (for when we re-enable live API):
+ * MySQL DECIMAL columns are returned as STRINGS through PHP PDO
+ * (e.g. "350.00" not 350). Recharts crashes with
+ * `TypeError: (f ?? []).map is not a function` when it receives
+ * string values where numbers are expected.
+ *
+ * FIX NEEDED in PHP API before re-enabling:
+ * - ledger.php: cast budget/actual/variance to (float) in array_map
+ * - kpi.php: cast target_value/current_value to (float) in array_map
+ * - summary.php: ensure all numeric fields are cast to (float)
+ * These casts were already added in commits 69b1c4d..d38365d but
+ * verify they're still present after any API changes.
  */
 import type {
   DashboardSummary,
