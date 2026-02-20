@@ -1,3 +1,7 @@
+# php -- BEGIN cPanel managed block
+AddHandler application/x-httpd-ea-php82 .php
+# php -- END cPanel managed block
+
 RewriteEngine On
 
 # Let API requests pass through to PHP
