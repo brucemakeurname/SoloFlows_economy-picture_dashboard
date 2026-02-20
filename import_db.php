@@ -3,7 +3,7 @@ header('Content-Type: application/json');
 $host = 'localhost';
 $db   = 'l5v17l38yo4h_economy_picture';
 $user = 'l5v17l38yo4h_ep_admin';
-$pass = 'Ep@dm1n2026!Sf';
+$pass = 'Matkhau626!';
 $results = [];
 
 try {
