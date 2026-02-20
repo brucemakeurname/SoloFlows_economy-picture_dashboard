@@ -1,5 +1,8 @@
 ---
 deployment:
   tasks:
+    - export DEPLOYPATH=/home/l5v17l38yo4h/anhcu.art
+    - /bin/cp -R dist/* $DEPLOYPATH/dist/
+    - /bin/cp -R api/*.php $DEPLOYPATH/api/
     - /bin/echo "Economy Picture deployed to anhcu.art"
-    - /bin/test -f /home/l5v17l38yo4h/anhcu.art/api/config.env.php && echo "config.env.php OK" || echo "WARNING: config.env.php missing — run api/_setup_env.php"
+    - /bin/test -f $DEPLOYPATH/api/config.env.php && echo "config.env.php OK" || echo "WARNING: config.env.php missing"
