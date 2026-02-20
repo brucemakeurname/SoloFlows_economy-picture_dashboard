@@ -14,62 +14,20 @@ import { formatCurrency, periodToLabel } from "@/lib/utils";
 import { CHART_COLORS, CATEGORY_COLORS } from "@/lib/constants";
 import type { DashboardSummary } from "@/lib/types";
 
-/* -------------------------------------------------------------------------- */
-/*  Skeleton placeholders while loading                                       */
-/* -------------------------------------------------------------------------- */
-
-function SkeletonCard() {
-  return (
-    <Card>
-      <CardContent className="p-6">
-        <div className="space-y-3">
-          <div className="h-4 w-24 animate-pulse rounded bg-muted" />
-          <div className="h-8 w-32 animate-pulse rounded bg-muted" />
-          <div className="h-3 w-20 animate-pulse rounded bg-muted" />
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
-
-function SkeletonChart() {
-  return (
-    <Card>
-      <CardHeader>
-        <div className="h-5 w-40 animate-pulse rounded bg-muted" />
-      </CardHeader>
-      <CardContent>
-        <div className="h-[350px] w-full animate-pulse rounded bg-muted/50" />
-      </CardContent>
-    </Card>
-  );
-}
-
-/* -------------------------------------------------------------------------- */
-/*  Helpers                                                                    */
-/* -------------------------------------------------------------------------- */
-
-/** Safely coerce any value to a finite number (0 fallback). */
 function num(v: unknown): number {
   const n = Number(v);
   return Number.isFinite(n) ? n : 0;
 }
 
-const usdFormatter = (v: number) => formatCurrency(v);
-
-/* -------------------------------------------------------------------------- */
-/*  Overview page                                                              */
-/* -------------------------------------------------------------------------- */
+const fmt = (v: number) => formatCurrency(v);
 
 export default function Overview() {
   const { filters } = useContext(FilterContext);
-
   const { data, loading } = useApi<DashboardSummary>(
     `summary.php?period=${filters.period}`,
     [filters.period]
   );
 
-  /* ---- Revenue vs Expenses grouped bar chart data ---- */
   const revenueVsExpenseData = useMemo(() => {
     if (!data?.monthly_trend || !Array.isArray(data.monthly_trend)) return [];
     return data.monthly_trend.map((m) => ({
@@ -79,7 +37,6 @@ export default function Overview() {
     }));
   }, [data]);
 
-  /* ---- Monthly trend line chart data (revenue, cogs, opex, net) ---- */
   const trendData = useMemo(() => {
     if (!data?.monthly_trend || !Array.isArray(data.monthly_trend)) return [];
     return data.monthly_trend.map((m) => ({
@@ -91,21 +48,15 @@ export default function Overview() {
     }));
   }, [data]);
 
-  /* ---- Expense breakdown pie/donut data ---- */
   const expensePieData = useMemo(() => {
-    if (!data?.expense_by_category || !Array.isArray(data.expense_by_category))
-      return [];
+    if (!data?.expense_by_category || !Array.isArray(data.expense_by_category)) return [];
     return data.expense_by_category.map((item) => ({
       name: String(item.name ?? ""),
       value: num(item.amount),
-      color:
-        item.color ||
-        CATEGORY_COLORS[String(item.name ?? "").toLowerCase()] ||
-        CHART_COLORS.muted,
+      color: item.color || CATEGORY_COLORS[String(item.name ?? "").toLowerCase()] || CHART_COLORS.muted,
     }));
   }, [data]);
 
-  /* ---- Runway gauge: cash / burn_rate (months) ---- */
   const runwayMonths = useMemo(() => {
     if (!data) return 0;
     const burnRate = num(data.burn_rate);
@@ -115,48 +66,34 @@ export default function Overview() {
     return Math.round(cash / burnRate);
   }, [data]);
 
-  /* ---- Loading state ---- */
   if (loading || !data) {
     return (
-      <PageContainer
-        title="Overview"
-        description="Full financial picture at a glance"
-      >
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <PageContainer title="Overview" description="Full financial picture">
+        <div className="grid grid-cols-2 gap-2 lg:grid-cols-4">
           {Array.from({ length: 4 }).map((_, i) => (
-            <SkeletonCard key={i} />
-          ))}
-        </div>
-        <div className="mt-6 grid grid-cols-1 gap-6 md:grid-cols-2">
-          {Array.from({ length: 4 }).map((_, i) => (
-            <SkeletonChart key={i} />
+            <Card key={i}><CardContent className="p-3"><div className="h-12 animate-pulse rounded bg-muted" /></CardContent></Card>
           ))}
         </div>
       </PageContainer>
     );
   }
 
-  /* ---- Derived KPI values ---- */
   const totalRevenue = num(data.total_revenue);
   const totalCogs = num(data.total_cogs);
   const totalOpex = num(data.total_opex);
   const netProfit = num(data.net_profit);
   const burnRate = num(data.burn_rate);
   const totalExpenses = totalCogs + totalOpex;
-  const profitMargin =
-    totalRevenue > 0 ? (netProfit / totalRevenue) * 100 : 0;
+  const profitMargin = totalRevenue > 0 ? (netProfit / totalRevenue) * 100 : 0;
 
   return (
-    <PageContainer
-      title="Overview"
-      description="Full financial picture at a glance"
-    >
-      {/* ---- 4 KPI Cards Row ---- */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+    <PageContainer title="Overview" description="Full financial picture">
+      {/* KPI Cards — 4 across */}
+      <div className="grid grid-cols-2 gap-2 lg:grid-cols-4">
         <KPICard
           title="Total Revenue"
           value={formatCurrency(totalRevenue)}
-          icon={<DollarSign className="h-6 w-6" />}
+          icon={<DollarSign className="h-4 w-4" />}
           trend={totalRevenue > 0 ? "up" : "flat"}
           change={totalRevenue > 0 ? profitMargin : undefined}
           changeLabel="margin"
@@ -164,13 +101,13 @@ export default function Overview() {
         <KPICard
           title="Total Expenses"
           value={formatCurrency(totalExpenses)}
-          icon={<CreditCard className="h-6 w-6" />}
+          icon={<CreditCard className="h-4 w-4" />}
           trend={totalExpenses > totalRevenue ? "up" : "down"}
         />
         <KPICard
           title="Net Profit"
           value={formatCurrency(netProfit)}
-          icon={<TrendingUp className="h-6 w-6" />}
+          icon={<TrendingUp className="h-4 w-4" />}
           change={profitMargin}
           changeLabel="margin"
           trend={netProfit >= 0 ? "up" : "down"}
@@ -178,130 +115,92 @@ export default function Overview() {
         <KPICard
           title="Burn Rate"
           value={formatCurrency(burnRate)}
-          icon={<Flame className="h-6 w-6" />}
+          icon={<Flame className="h-4 w-4" />}
           trend={burnRate > 0 ? "down" : "flat"}
-          changeLabel="/ month"
+          changeLabel="/mo"
         />
       </div>
 
-      {/* ---- 4 Charts Grid (1 col mobile, 2 col tablet+) ---- */}
-      <div className="mt-6 grid grid-cols-1 gap-6 md:grid-cols-2">
-        {/* 1. Revenue vs Expenses grouped bar chart */}
+      {/* Charts — 2x2 grid, compact 200px height */}
+      <div className="mt-3 grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-4">
         <Card>
-          <CardHeader>
-            <CardTitle>Revenue vs Expenses</CardTitle>
+          <CardHeader className="px-3 py-2">
+            <CardTitle className="text-sm">Revenue vs Expenses</CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="px-2 pb-2 pt-0">
             <ErrorBoundary name="BarChart">
               {revenueVsExpenseData.length > 0 ? (
                 <BarChartWidget
                   data={revenueVsExpenseData}
                   xKey="period"
                   bars={[
-                    {
-                      key: "revenue",
-                      name: "Revenue",
-                      color: CHART_COLORS.green,
-                    },
-                    {
-                      key: "opex",
-                      name: "Operating Expenses",
-                      color: CHART_COLORS.red,
-                    },
+                    { key: "revenue", name: "Revenue", color: CHART_COLORS.green },
+                    { key: "opex", name: "OpEx", color: CHART_COLORS.red },
                   ]}
-                  formatValue={usdFormatter}
+                  height={200}
+                  formatValue={fmt}
                 />
               ) : (
-                <div className="flex h-[350px] items-center justify-center text-sm text-muted-foreground">
-                  No data available
-                </div>
+                <div className="flex h-[200px] items-center justify-center text-xs text-muted-foreground">No data</div>
               )}
             </ErrorBoundary>
           </CardContent>
         </Card>
 
-        {/* 2. Monthly Trend line chart (revenue, cogs, opex, net) */}
         <Card>
-          <CardHeader>
-            <CardTitle>Monthly Trend</CardTitle>
+          <CardHeader className="px-3 py-2">
+            <CardTitle className="text-sm">Monthly Trend</CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="px-2 pb-2 pt-0">
             <ErrorBoundary name="LineChart">
               {trendData.length > 0 ? (
                 <LineChartWidget
                   data={trendData}
                   xKey="period"
                   lines={[
-                    {
-                      key: "revenue",
-                      name: "Revenue",
-                      color: CHART_COLORS.green,
-                    },
+                    { key: "revenue", name: "Revenue", color: CHART_COLORS.green },
                     { key: "cogs", name: "COGS", color: CHART_COLORS.orange },
-                    {
-                      key: "opex",
-                      name: "Operating Expenses",
-                      color: CHART_COLORS.red,
-                    },
-                    {
-                      key: "net",
-                      name: "Net Profit",
-                      color: CHART_COLORS.blue,
-                    },
+                    { key: "opex", name: "OpEx", color: CHART_COLORS.red },
+                    { key: "net", name: "Net", color: CHART_COLORS.blue },
                   ]}
-                  formatValue={usdFormatter}
+                  height={200}
+                  formatValue={fmt}
                 />
               ) : (
-                <div className="flex h-[350px] items-center justify-center text-sm text-muted-foreground">
-                  No data available
-                </div>
+                <div className="flex h-[200px] items-center justify-center text-xs text-muted-foreground">No data</div>
               )}
             </ErrorBoundary>
           </CardContent>
         </Card>
 
-        {/* 3. Expense Breakdown donut chart (innerRadius=60) */}
         <Card>
-          <CardHeader>
-            <CardTitle>Expense Breakdown</CardTitle>
+          <CardHeader className="px-3 py-2">
+            <CardTitle className="text-sm">Expense Breakdown</CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="px-2 pb-2 pt-0">
             <ErrorBoundary name="PieChart">
               {expensePieData.length > 0 ? (
-                <PieChartWidget
-                  data={expensePieData}
-                  innerRadius={60}
-                  formatValue={usdFormatter}
-                />
+                <PieChartWidget data={expensePieData} innerRadius={40} height={200} formatValue={fmt} />
               ) : (
-                <div className="flex h-[350px] items-center justify-center text-sm text-muted-foreground">
-                  No expense data
-                </div>
+                <div className="flex h-[200px] items-center justify-center text-xs text-muted-foreground">No data</div>
               )}
             </ErrorBoundary>
           </CardContent>
         </Card>
 
-        {/* 4. Runway Gauge (cash / burn_rate) */}
         <Card>
-          <CardHeader>
-            <CardTitle>Estimated Runway</CardTitle>
+          <CardHeader className="px-3 py-2">
+            <CardTitle className="text-sm">Runway</CardTitle>
           </CardHeader>
-          <CardContent className="flex items-center justify-center">
+          <CardContent className="flex items-center justify-center px-2 pb-2 pt-0">
             <ErrorBoundary name="GaugeChart">
               <GaugeChart
                 value={runwayMonths}
                 max={24}
-                label="Remaining Runway"
+                label="Remaining"
                 unit="months"
-                color={
-                  runwayMonths > 12
-                    ? CHART_COLORS.green
-                    : runwayMonths > 6
-                      ? CHART_COLORS.warning
-                      : CHART_COLORS.destructive
-                }
-                size={220}
+                color={runwayMonths > 12 ? CHART_COLORS.green : runwayMonths > 6 ? CHART_COLORS.warning : CHART_COLORS.destructive}
+                size={160}
               />
             </ErrorBoundary>
           </CardContent>

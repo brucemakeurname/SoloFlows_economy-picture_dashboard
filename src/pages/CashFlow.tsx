@@ -13,340 +13,155 @@ import { cn, formatCurrency } from "@/lib/utils";
 import { CHART_COLORS } from "@/lib/constants";
 import type { LedgerEntry } from "@/lib/types";
 
-/* -------------------------------------------------------------------------- */
-/*  Helpers                                                                    */
-/* -------------------------------------------------------------------------- */
-
-/** Safely coerce any value to a finite number (0 fallback). */
 function num(v: unknown): number {
   const n = Number(v);
   return Number.isFinite(n) ? n : 0;
 }
 
-const usdFormatter = (v: number) => formatCurrency(v);
-
-function varianceBadge(variance: number) {
-  if (variance > 0) {
-    return (
-      <span className="text-sm font-medium text-destructive">
-        +{formatCurrency(variance)}
-      </span>
-    );
-  }
-  if (variance < 0) {
-    return (
-      <span className="text-sm font-medium text-success">
-        {formatCurrency(variance)}
-      </span>
-    );
-  }
-  return (
-    <span className="text-sm font-medium text-muted-foreground">
-      {formatCurrency(0)}
-    </span>
-  );
-}
+const fmt = (v: number) => formatCurrency(v);
 
 function statusBadge(status: LedgerEntry["status"]) {
-  const config: Record<
-    LedgerEntry["status"],
-    { label: string; variant: "default" | "success" | "warning" | "outline" }
-  > = {
+  const config: Record<LedgerEntry["status"], { label: string; variant: "default" | "success" | "warning" | "outline" }> = {
     forecast: { label: "Forecast", variant: "warning" },
     actual: { label: "Actual", variant: "success" },
     closed: { label: "Closed", variant: "outline" },
   };
-
   const { label, variant } = config[status];
   return <Badge variant={variant}>{label}</Badge>;
 }
 
-/* -------------------------------------------------------------------------- */
-/*  CashFlow page                                                              */
-/* -------------------------------------------------------------------------- */
-
 export default function CashFlow() {
   const { filters } = useContext(FilterContext);
-
   const { entries, loading, updateEntry } = useLedger(filters.period);
 
-  /* ---- Handlers for inline edits ---- */
   const handleBudgetSave = useCallback(
-    (entry: LedgerEntry) => (newValue: number) => {
-      updateEntry(entry.id, { budget: newValue });
-    },
+    (entry: LedgerEntry) => (newValue: number) => { updateEntry(entry.id, { budget: newValue }); },
     [updateEntry]
   );
-
   const handleActualSave = useCallback(
-    (entry: LedgerEntry) => (newValue: number) => {
-      updateEntry(entry.id, { actual: newValue });
-    },
+    (entry: LedgerEntry) => (newValue: number) => { updateEntry(entry.id, { actual: newValue }); },
     [updateEntry]
   );
 
-  /* ---- Table column definitions ---- */
-  const columns = useMemo(
-    () => [
-      {
-        key: "account_code",
-        header: "Code",
-        sortable: true,
-        render: (row: LedgerEntry) => (
-          <span className="font-mono text-sm font-medium text-foreground">
-            {row.account_code ?? "---"}
-          </span>
-        ),
-      },
-      {
-        key: "account_name",
-        header: "Account Name",
-        sortable: true,
-        render: (row: LedgerEntry) => (
-          <span className="text-sm text-foreground">
-            {row.account_name ?? "---"}
-          </span>
-        ),
-      },
-      {
-        key: "category_name",
-        header: "Category",
-        sortable: true,
-        render: (row: LedgerEntry) => (
-          <Badge variant="outline">{row.category_name ?? "---"}</Badge>
-        ),
-      },
-      {
-        key: "budget",
-        header: "Budget",
-        align: "right" as const,
-        sortable: true,
-        render: (row: LedgerEntry) => (
-          <EditableCell
-            value={row.budget}
-            onSave={handleBudgetSave(row)}
-            formatDisplay={usdFormatter}
-          />
-        ),
-      },
-      {
-        key: "actual",
-        header: "Actual",
-        align: "right" as const,
-        sortable: true,
-        render: (row: LedgerEntry) => (
-          <EditableCell
-            value={row.actual}
-            onSave={handleActualSave(row)}
-            formatDisplay={usdFormatter}
-          />
-        ),
-      },
-      {
-        key: "variance",
-        header: "Variance",
-        align: "right" as const,
-        sortable: true,
-        render: (row: LedgerEntry) => {
-          const variance = row.actual - row.budget;
-          return varianceBadge(variance);
-        },
-      },
-      {
-        key: "status",
-        header: "Status",
-        align: "center" as const,
-        render: (row: LedgerEntry) => statusBadge(row.status),
-      },
-    ],
-    [handleBudgetSave, handleActualSave]
-  );
+  const columns = useMemo(() => [
+    { key: "account_code", header: "Code", sortable: true, render: (row: LedgerEntry) => <span className="font-mono text-xs font-medium">{row.account_code ?? "---"}</span> },
+    { key: "account_name", header: "Account", sortable: true, render: (row: LedgerEntry) => <span className="text-xs">{row.account_name ?? "---"}</span> },
+    { key: "category_name", header: "Type", sortable: true, render: (row: LedgerEntry) => <Badge variant="outline">{row.category_name ?? "---"}</Badge> },
+    { key: "budget", header: "Budget", align: "right" as const, sortable: true, render: (row: LedgerEntry) => <EditableCell value={row.budget} onSave={handleBudgetSave(row)} formatDisplay={fmt} /> },
+    { key: "actual", header: "Actual", align: "right" as const, sortable: true, render: (row: LedgerEntry) => <EditableCell value={row.actual} onSave={handleActualSave(row)} formatDisplay={fmt} /> },
+    { key: "variance", header: "Var", align: "right" as const, sortable: true, render: (row: LedgerEntry) => {
+      const v = row.actual - row.budget;
+      return <span className={cn("text-xs font-medium", v > 0 ? "text-destructive" : v < 0 ? "text-success" : "text-muted-foreground")}>{v >= 0 ? "+" : ""}{formatCurrency(v)}</span>;
+    }},
+    { key: "status", header: "Status", align: "center" as const, render: (row: LedgerEntry) => statusBadge(row.status) },
+  ], [handleBudgetSave, handleActualSave]);
 
-  /* ---- Budget vs Actual grouped bar chart data ---- */
-  const barChartData = useMemo(() => {
-    return entries.map((entry) => ({
-      name: entry.account_name ?? entry.account_code ?? `#${entry.account_id}`,
-      budget: num(entry.budget),
-      actual: num(entry.actual),
-    }));
-  }, [entries]);
+  const barChartData = useMemo(() => entries.map((e) => ({
+    name: e.account_name ?? e.account_code ?? `#${e.account_id}`,
+    budget: num(e.budget),
+    actual: num(e.actual),
+  })), [entries]);
 
-  /* ---- Running balance area chart data ---- */
   const runningBalanceData = useMemo(() => {
-    let cumulativeBudget = 0;
-    let cumulativeActual = 0;
-
-    return entries.map((entry) => {
-      const isRevenue = entry.category_type === "revenue";
-      const budget = num(entry.budget);
-      const actual = num(entry.actual);
-      const budgetDelta = isRevenue ? budget : -budget;
-      const actualDelta = isRevenue ? actual : -actual;
-
-      cumulativeBudget += budgetDelta;
-      cumulativeActual += actualDelta;
-
-      return {
-        name:
-          entry.account_name ?? entry.account_code ?? `#${entry.account_id}`,
-        budget_balance: cumulativeBudget,
-        actual_balance: cumulativeActual,
-      };
+    let cb = 0, ca = 0;
+    return entries.map((e) => {
+      const isRev = e.category_type === "revenue";
+      const b = num(e.budget), a = num(e.actual);
+      cb += isRev ? b : -b;
+      ca += isRev ? a : -a;
+      return { name: e.account_name ?? e.account_code ?? `#${e.account_id}`, budget_balance: cb, actual_balance: ca };
     });
   }, [entries]);
 
-  /* ---- Variance summary stats ---- */
-  const varianceSummary = useMemo(() => {
-    const total = entries.reduce(
-      (acc, e) => {
-        acc.budget += num(e.budget);
-        acc.actual += num(e.actual);
-        return acc;
-      },
-      { budget: 0, actual: 0 }
-    );
-
-    return {
-      totalBudget: total.budget,
-      totalActual: total.actual,
-      totalVariance: total.actual - total.budget,
-      overBudgetCount: entries.filter((e) => e.actual > e.budget).length,
-      underBudgetCount: entries.filter((e) => e.actual < e.budget).length,
-    };
+  const vs = useMemo(() => {
+    const t = entries.reduce((acc, e) => { acc.b += num(e.budget); acc.a += num(e.actual); return acc; }, { b: 0, a: 0 });
+    return { budget: t.b, actual: t.a, variance: t.a - t.b, over: entries.filter((e) => e.actual > e.budget).length, under: entries.filter((e) => e.actual < e.budget).length };
   }, [entries]);
 
   return (
-    <PageContainer
-      title="Cash Flow"
-      description="Manage budget and actual cash flow"
-    >
-      {/* ---- Variance Summary Row ---- */}
-      <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <Card>
-          <CardContent className="p-4">
-            <p className="text-sm text-muted-foreground">Total Budget</p>
-            <p className="text-xl font-bold text-foreground">
-              {formatCurrency(varianceSummary.totalBudget)}
-            </p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
-            <p className="text-sm text-muted-foreground">Total Actual</p>
-            <p className="text-xl font-bold text-foreground">
-              {formatCurrency(varianceSummary.totalActual)}
-            </p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
-            <p className="text-sm text-muted-foreground">Total Variance</p>
-            <p
-              className={cn(
-                "text-xl font-bold",
-                varianceSummary.totalVariance > 0
-                  ? "text-destructive"
-                  : varianceSummary.totalVariance < 0
-                    ? "text-success"
-                    : "text-foreground"
-              )}
-            >
-              {varianceSummary.totalVariance >= 0 ? "+" : ""}
-              {formatCurrency(varianceSummary.totalVariance)}
-            </p>
-            <p className="mt-1 text-xs text-muted-foreground">
-              {varianceSummary.underBudgetCount} under budget
-              {" / "}
-              {varianceSummary.overBudgetCount} over budget
-            </p>
-          </CardContent>
-        </Card>
+    <PageContainer title="Cash Flow" description="Budget and actual cash flow">
+      {/* Inline summary stats */}
+      <div className="mb-3 flex flex-wrap items-center gap-4 rounded-lg border border-border bg-card px-4 py-2 text-sm">
+        <div><span className="text-muted-foreground">Budget: </span><span className="font-semibold">{formatCurrency(vs.budget)}</span></div>
+        <div><span className="text-muted-foreground">Actual: </span><span className="font-semibold">{formatCurrency(vs.actual)}</span></div>
+        <div>
+          <span className="text-muted-foreground">Variance: </span>
+          <span className={cn("font-semibold", vs.variance > 0 ? "text-destructive" : vs.variance < 0 ? "text-success" : "")}>
+            {vs.variance >= 0 ? "+" : ""}{formatCurrency(vs.variance)}
+          </span>
+          <span className="ml-1.5 text-xs text-muted-foreground">({vs.under} under / {vs.over} over)</span>
+        </div>
       </div>
 
-      {/* ---- Editable Ledger Table ---- */}
-      <Card className="mb-6">
-        <CardHeader>
-          <CardTitle>Cash Flow Ledger</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <DataTable
-            columns={columns}
-            data={entries as (LedgerEntry & Record<string, unknown>)[]}
-            loading={loading}
-            emptyMessage="No cash flow data for this period"
-          />
-        </CardContent>
-      </Card>
-
-      {/* ---- Charts Row (2 side by side) ---- */}
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-        {/* Budget vs Actual Grouped Bar Chart */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Budget vs Actual</CardTitle>
+      {/* Main layout: table left, charts right */}
+      <div className="grid grid-cols-1 gap-3 xl:grid-cols-3">
+        {/* Table — spans 2 cols on xl */}
+        <Card className="xl:col-span-2">
+          <CardHeader className="px-3 py-2">
+            <CardTitle className="text-sm">Cash Flow Ledger</CardTitle>
           </CardHeader>
-          <CardContent>
-            <ErrorBoundary name="BarChart">
-              {barChartData.length > 0 ? (
-                <BarChartWidget
-                  data={barChartData}
-                  xKey="name"
-                  bars={[
-                    {
-                      key: "budget",
-                      name: "Budget",
-                      color: CHART_COLORS.blue,
-                    },
-                    {
-                      key: "actual",
-                      name: "Actual",
-                      color: CHART_COLORS.orange,
-                    },
-                  ]}
-                  formatValue={usdFormatter}
-                />
-              ) : (
-                <div className="flex h-[350px] items-center justify-center text-sm text-muted-foreground">
-                  No data available
-                </div>
-              )}
-            </ErrorBoundary>
+          <CardContent className="px-2 pb-2 pt-0">
+            <div className="max-h-[400px] overflow-auto">
+              <DataTable
+                columns={columns}
+                data={entries as (LedgerEntry & Record<string, unknown>)[]}
+                loading={loading}
+                emptyMessage="No cash flow data for this period"
+              />
+            </div>
           </CardContent>
         </Card>
 
-        {/* Running Balance Area Chart */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Running Balance</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ErrorBoundary name="AreaChart">
-              {runningBalanceData.length > 0 ? (
-                <AreaChartWidget
-                  data={runningBalanceData}
-                  xKey="name"
-                  areas={[
-                    {
-                      key: "budget_balance",
-                      name: "Budget Balance",
-                      color: CHART_COLORS.blue,
-                    },
-                    {
-                      key: "actual_balance",
-                      name: "Actual Balance",
-                      color: CHART_COLORS.green,
-                    },
-                  ]}
-                  formatValue={usdFormatter}
-                />
-              ) : (
-                <div className="flex h-[350px] items-center justify-center text-sm text-muted-foreground">
-                  No data available
-                </div>
-              )}
-            </ErrorBoundary>
-          </CardContent>
-        </Card>
+        {/* Charts stacked vertically on right */}
+        <div className="flex flex-col gap-3">
+          <Card>
+            <CardHeader className="px-3 py-2">
+              <CardTitle className="text-sm">Budget vs Actual</CardTitle>
+            </CardHeader>
+            <CardContent className="px-2 pb-2 pt-0">
+              <ErrorBoundary name="BarChart">
+                {barChartData.length > 0 ? (
+                  <BarChartWidget
+                    data={barChartData}
+                    xKey="name"
+                    bars={[
+                      { key: "budget", name: "Budget", color: CHART_COLORS.blue },
+                      { key: "actual", name: "Actual", color: CHART_COLORS.orange },
+                    ]}
+                    height={180}
+                    formatValue={fmt}
+                  />
+                ) : (
+                  <div className="flex h-[180px] items-center justify-center text-xs text-muted-foreground">No data</div>
+                )}
+              </ErrorBoundary>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="px-3 py-2">
+              <CardTitle className="text-sm">Running Balance</CardTitle>
+            </CardHeader>
+            <CardContent className="px-2 pb-2 pt-0">
+              <ErrorBoundary name="AreaChart">
+                {runningBalanceData.length > 0 ? (
+                  <AreaChartWidget
+                    data={runningBalanceData}
+                    xKey="name"
+                    areas={[
+                      { key: "budget_balance", name: "Budget", color: CHART_COLORS.blue },
+                      { key: "actual_balance", name: "Actual", color: CHART_COLORS.green },
+                    ]}
+                    height={180}
+                    formatValue={fmt}
+                  />
+                ) : (
+                  <div className="flex h-[180px] items-center justify-center text-xs text-muted-foreground">No data</div>
+                )}
+              </ErrorBoundary>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </PageContainer>
   );
