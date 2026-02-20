@@ -15,6 +15,10 @@ dist-ssr
 .env
 api/config.env.php
 
+# Server logs
+api/error_log
+error_log
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
