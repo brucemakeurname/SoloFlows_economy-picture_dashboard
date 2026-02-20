@@ -14,7 +14,7 @@ export default function PageContainer({
   children,
 }: PageContainerProps) {
   return (
-    <div className="flex flex-col gap-3 p-3 sm:p-4">
+    <div className="flex flex-col gap-3 p-3 sm:p-4 animate-fade-in-up">
       {/* ---- Page header ---- */}
       <div className="flex items-center justify-between gap-3">
         <div className="min-w-0">
@@ -22,7 +22,7 @@ export default function PageContainer({
             {title}
           </h2>
           {description && (
-            <p className="text-xs text-muted-foreground">{description}</p>
+            <p className="text-[11px] text-muted-foreground">{description}</p>
           )}
         </div>
         {actions && (

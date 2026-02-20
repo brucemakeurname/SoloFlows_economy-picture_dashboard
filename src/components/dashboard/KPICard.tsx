@@ -9,6 +9,7 @@ interface KPICardProps {
   changeLabel?: string;
   icon: ReactNode;
   trend?: "up" | "down" | "flat";
+  accent?: string;
 }
 
 function TrendArrow({ trend }: { trend: "up" | "down" | "flat" }) {
@@ -40,6 +41,7 @@ export default function KPICard({
   changeLabel,
   icon,
   trend = "flat",
+  accent,
 }: KPICardProps) {
   const trendColor = {
     up: "text-success",
@@ -47,19 +49,26 @@ export default function KPICard({
     flat: "text-muted-foreground",
   }[trend];
 
+  const accentColor = accent ?? (trend === "up" ? "hsl(142,71%,45%)" : trend === "down" ? "hsl(0,84%,60%)" : "hsl(221,83%,53%)");
+
   return (
-    <Card className="transition-shadow hover:shadow-md">
-      <CardContent className="px-3 py-2.5">
+    <Card className="group relative overflow-hidden transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5">
+      {/* Accent top border */}
+      <div
+        className="absolute inset-x-0 top-0 h-0.5 transition-all duration-300 group-hover:h-1"
+        style={{ background: `linear-gradient(90deg, ${accentColor}, ${accentColor}80)` }}
+      />
+      <CardContent className="px-3 py-3">
         <div className="flex items-center justify-between gap-2">
           <div className="min-w-0 flex-1">
-            <p className="truncate text-xs font-medium text-muted-foreground">{title}</p>
-            <p className="text-lg font-extrabold tracking-tight text-foreground leading-tight">
+            <p className="truncate text-[11px] font-medium text-muted-foreground">{title}</p>
+            <p className="mt-0.5 text-xl font-extrabold tracking-tight text-foreground leading-tight font-mono">
               {value}
             </p>
             {change !== undefined && (
-              <div className={cn("flex items-center gap-0.5 text-xs", trendColor)}>
+              <div className={cn("mt-0.5 flex items-center gap-0.5 text-xs", trendColor)}>
                 <TrendArrow trend={trend} />
-                <span className="font-medium">
+                <span className="font-semibold">
                   {change >= 0 ? "+" : ""}{change.toFixed(1)}%
                 </span>
                 {changeLabel && (
@@ -68,7 +77,13 @@ export default function KPICard({
               </div>
             )}
           </div>
-          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+          <div
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl transition-transform duration-300 group-hover:scale-110"
+            style={{
+              background: `linear-gradient(135deg, ${accentColor}18, ${accentColor}08)`,
+              color: accentColor,
+            }}
+          >
             {icon}
           </div>
         </div>

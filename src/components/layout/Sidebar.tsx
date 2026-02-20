@@ -12,13 +12,14 @@ import {
   TrendingUp,
   Wallet,
   X,
+  Zap,
   type LucideIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { NAV_ITEMS } from "@/lib/constants";
 
 /* -------------------------------------------------------------------------- */
-/*  Icon mapping — maps string names from NAV_ITEMS to lucide icon components */
+/*  Icon mapping                                                               */
 /* -------------------------------------------------------------------------- */
 
 const ICON_MAP: Record<string, LucideIcon> = {
@@ -67,26 +68,30 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
       {/* ---- Sidebar panel ---- */}
       <aside
         className={cn(
-          "fixed inset-y-0 left-0 z-50 flex w-64 flex-col border-r border-border bg-card",
+          "fixed inset-y-0 left-0 z-50 flex w-64 flex-col",
+          "bg-gradient-to-b from-[hsl(222,47%,8%)] to-[hsl(222,47%,12%)]",
           "transition-transform duration-300 ease-in-out",
-          // Desktop: always visible
           "lg:translate-x-0",
-          // Mobile: slide in/out
           open ? "translate-x-0" : "-translate-x-full"
         )}
       >
         {/* ---- Header / brand ---- */}
-        <div className="flex h-16 items-center justify-between border-b border-border px-4">
-          <div className="flex items-center gap-2">
-            <BarChart3 className="h-6 w-6 text-primary" />
-            <span className="text-lg font-bold tracking-tight text-foreground">
-              Economy Picture
-            </span>
+        <div className="flex h-16 items-center justify-between px-4">
+          <div className="flex items-center gap-2.5">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-primary to-accent shadow-lg shadow-primary/25">
+              <Zap className="h-4 w-4 text-white" />
+            </div>
+            <div>
+              <span className="text-sm font-bold tracking-tight text-white">
+                Economy Picture
+              </span>
+              <p className="text-[10px] font-medium text-white/40">Solo Flows</p>
+            </div>
           </div>
 
           {/* Close button — mobile only */}
           <button
-            className="rounded-md p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground lg:hidden"
+            className="rounded-md p-1.5 text-white/50 hover:bg-white/10 hover:text-white lg:hidden"
             onClick={onClose}
             aria-label="Close sidebar"
           >
@@ -96,7 +101,10 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
 
         {/* ---- Navigation ---- */}
         <nav className="flex-1 overflow-y-auto px-3 py-4">
-          <ul className="space-y-1">
+          <p className="mb-2 px-3 text-[10px] font-semibold uppercase tracking-widest text-white/30">
+            Menu
+          </p>
+          <ul className="space-y-0.5">
             {NAV_ITEMS.map((item) => {
               const Icon = resolveIcon(item.icon);
               return (
@@ -106,15 +114,31 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
                     onClick={onClose}
                     className={({ isActive }) =>
                       cn(
-                        "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
+                        "group flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200",
                         isActive
-                          ? "bg-primary/10 text-primary"
-                          : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                          ? "bg-white/10 text-white shadow-sm"
+                          : "text-white/50 hover:bg-white/5 hover:text-white/80"
                       )
                     }
                   >
-                    <Icon className="h-5 w-5 shrink-0" />
-                    <span>{item.label}</span>
+                    {({ isActive }) => (
+                      <>
+                        <div
+                          className={cn(
+                            "flex h-7 w-7 items-center justify-center rounded-md transition-all duration-200",
+                            isActive
+                              ? "bg-gradient-to-br from-primary to-primary/70 text-white shadow-sm shadow-primary/30"
+                              : "text-current group-hover:bg-white/5"
+                          )}
+                        >
+                          <Icon className="h-4 w-4" />
+                        </div>
+                        <span>{item.label}</span>
+                        {isActive && (
+                          <div className="ml-auto h-1.5 w-1.5 rounded-full bg-accent shadow-sm shadow-accent/50" />
+                        )}
+                      </>
+                    )}
                   </NavLink>
                 </li>
               );
@@ -123,8 +147,11 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
         </nav>
 
         {/* ---- Footer ---- */}
-        <div className="border-t border-border px-4 py-3">
-          <p className="text-xs text-muted-foreground">Solo Flows v1.0</p>
+        <div className="border-t border-white/10 px-4 py-3">
+          <div className="flex items-center gap-2">
+            <div className="h-2 w-2 rounded-full bg-success animate-pulse" />
+            <p className="text-[11px] text-white/40">v1.0 — Live</p>
+          </div>
         </div>
       </aside>
     </>

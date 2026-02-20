@@ -81,15 +81,17 @@ export default function CashFlow() {
   return (
     <PageContainer title="Cash Flow" description="Budget and actual cash flow">
       {/* Inline summary stats */}
-      <div className="mb-3 flex flex-wrap items-center gap-4 rounded-lg border border-border bg-card px-4 py-2 text-sm">
-        <div><span className="text-muted-foreground">Budget: </span><span className="font-semibold">{formatCurrency(vs.budget)}</span></div>
-        <div><span className="text-muted-foreground">Actual: </span><span className="font-semibold">{formatCurrency(vs.actual)}</span></div>
+      <div className="mb-3 flex flex-wrap items-center gap-4 rounded-xl border border-border/50 bg-gradient-to-r from-primary/5 via-transparent to-transparent px-4 py-2.5 text-sm">
+        <div><span className="text-xs text-muted-foreground">Budget </span><span className="font-bold font-mono">{formatCurrency(vs.budget)}</span></div>
+        <div className="h-4 w-px bg-border" />
+        <div><span className="text-xs text-muted-foreground">Actual </span><span className="font-bold font-mono">{formatCurrency(vs.actual)}</span></div>
+        <div className="h-4 w-px bg-border" />
         <div>
-          <span className="text-muted-foreground">Variance: </span>
-          <span className={cn("font-semibold", vs.variance > 0 ? "text-destructive" : vs.variance < 0 ? "text-success" : "")}>
+          <span className="text-xs text-muted-foreground">Variance </span>
+          <span className={cn("font-bold font-mono", vs.variance > 0 ? "text-destructive" : vs.variance < 0 ? "text-success" : "")}>
             {vs.variance >= 0 ? "+" : ""}{formatCurrency(vs.variance)}
           </span>
-          <span className="ml-1.5 text-xs text-muted-foreground">({vs.under} under / {vs.over} over)</span>
+          <span className="ml-1.5 text-[10px] text-muted-foreground">({vs.under} under / {vs.over} over)</span>
         </div>
       </div>
 

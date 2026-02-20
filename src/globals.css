@@ -66,6 +66,38 @@ body {
   font-family: var(--font-sans);
 }
 
+/* ── Animations ── */
+@keyframes fade-in-up {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+@keyframes pulse-soft {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+.animate-fade-in-up {
+  animation: fade-in-up 0.4s ease-out both;
+}
+.animate-shimmer {
+  background: linear-gradient(90deg, transparent 0%, hsl(221 83% 53% / 0.07) 50%, transparent 100%);
+  background-size: 200% 100%;
+  animation: shimmer 3s ease-in-out infinite;
+}
+
+/* staggered card entrance */
+.stagger-grid > * { animation: fade-in-up 0.35s ease-out both; }
+.stagger-grid > *:nth-child(1) { animation-delay: 0ms; }
+.stagger-grid > *:nth-child(2) { animation-delay: 60ms; }
+.stagger-grid > *:nth-child(3) { animation-delay: 120ms; }
+.stagger-grid > *:nth-child(4) { animation-delay: 180ms; }
+.stagger-grid > *:nth-child(5) { animation-delay: 240ms; }
+.stagger-grid > *:nth-child(6) { animation-delay: 300ms; }
+
 /* ── Scrollbar ── */
 ::-webkit-scrollbar {
   width: 6px;

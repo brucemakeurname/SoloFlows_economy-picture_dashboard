@@ -1,5 +1,5 @@
 import { useContext, useMemo } from "react";
-import { DollarSign, CreditCard, TrendingUp, Flame } from "lucide-react";
+import { DollarSign, CreditCard, TrendingUp, Flame, ArrowUpRight, ArrowDownRight } from "lucide-react";
 import { FilterContext } from "@/App";
 import PageContainer from "@/components/layout/PageContainer";
 import KPICard from "@/components/dashboard/KPICard";
@@ -69,9 +69,9 @@ export default function Overview() {
   if (loading || !data) {
     return (
       <PageContainer title="Overview" description="Full financial picture">
-        <div className="grid grid-cols-2 gap-2 lg:grid-cols-4">
+        <div className="grid grid-cols-2 gap-2 lg:grid-cols-4 stagger-grid">
           {Array.from({ length: 4 }).map((_, i) => (
-            <Card key={i}><CardContent className="p-3"><div className="h-12 animate-pulse rounded bg-muted" /></CardContent></Card>
+            <Card key={i}><CardContent className="p-3"><div className="h-16 animate-pulse rounded-lg bg-muted/50" /></CardContent></Card>
           ))}
         </div>
       </PageContainer>
@@ -86,46 +86,77 @@ export default function Overview() {
   const totalExpenses = totalCogs + totalOpex;
   const profitMargin = totalRevenue > 0 ? (netProfit / totalRevenue) * 100 : 0;
 
+  const budgetRevenue = num(data.budget_revenue);
+  const revenuePct = budgetRevenue > 0 ? ((totalRevenue / budgetRevenue) * 100).toFixed(0) : "0";
+
   return (
     <PageContainer title="Overview" description="Full financial picture">
+      {/* Quick snapshot bar */}
+      <div className="mb-3 flex items-center gap-3 rounded-xl border border-border/50 bg-gradient-to-r from-primary/5 via-transparent to-accent/5 px-4 py-2.5">
+        <div className="flex items-center gap-1.5 text-xs">
+          <div className="h-2 w-2 rounded-full bg-success animate-pulse" />
+          <span className="font-medium text-foreground">Feb 2026</span>
+        </div>
+        <div className="h-4 w-px bg-border" />
+        <div className="flex items-center gap-1 text-xs text-muted-foreground">
+          Revenue at <span className="font-bold text-primary">{revenuePct}%</span> of budget
+        </div>
+        <div className="h-4 w-px bg-border" />
+        <div className="flex items-center gap-1 text-xs text-muted-foreground">
+          {netProfit >= 0 ? (
+            <ArrowUpRight className="h-3 w-3 text-success" />
+          ) : (
+            <ArrowDownRight className="h-3 w-3 text-destructive" />
+          )}
+          <span className={netProfit >= 0 ? "text-success font-medium" : "text-destructive font-medium"}>
+            {formatCurrency(netProfit)}
+          </span>
+          net
+        </div>
+      </div>
+
       {/* KPI Cards — 4 across */}
-      <div className="grid grid-cols-2 gap-2 lg:grid-cols-4">
+      <div className="grid grid-cols-2 gap-2 lg:grid-cols-4 stagger-grid">
         <KPICard
           title="Total Revenue"
           value={formatCurrency(totalRevenue)}
-          icon={<DollarSign className="h-4 w-4" />}
+          icon={<DollarSign className="h-5 w-5" />}
           trend={totalRevenue > 0 ? "up" : "flat"}
           change={totalRevenue > 0 ? profitMargin : undefined}
           changeLabel="margin"
+          accent={CHART_COLORS.green}
         />
         <KPICard
           title="Total Expenses"
           value={formatCurrency(totalExpenses)}
-          icon={<CreditCard className="h-4 w-4" />}
+          icon={<CreditCard className="h-5 w-5" />}
           trend={totalExpenses > totalRevenue ? "up" : "down"}
+          accent={CHART_COLORS.orange}
         />
         <KPICard
           title="Net Profit"
           value={formatCurrency(netProfit)}
-          icon={<TrendingUp className="h-4 w-4" />}
+          icon={<TrendingUp className="h-5 w-5" />}
           change={profitMargin}
           changeLabel="margin"
           trend={netProfit >= 0 ? "up" : "down"}
+          accent={netProfit >= 0 ? CHART_COLORS.green : CHART_COLORS.red}
         />
         <KPICard
           title="Burn Rate"
           value={formatCurrency(burnRate)}
-          icon={<Flame className="h-4 w-4" />}
+          icon={<Flame className="h-5 w-5" />}
           trend={burnRate > 0 ? "down" : "flat"}
           changeLabel="/mo"
+          accent={CHART_COLORS.red}
         />
       </div>
 
       {/* Charts — 2x2 grid, compact 200px height */}
-      <div className="mt-3 grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-4">
-        <Card>
+      <div className="mt-3 grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-4 stagger-grid">
+        <Card className="hover:shadow-md">
           <CardHeader className="px-3 py-2">
-            <CardTitle className="text-sm">Revenue vs Expenses</CardTitle>
+            <CardTitle className="text-sm font-semibold">Revenue vs Expenses</CardTitle>
           </CardHeader>
           <CardContent className="px-2 pb-2 pt-0">
             <ErrorBoundary name="BarChart">
@@ -147,9 +178,9 @@ export default function Overview() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="hover:shadow-md">
           <CardHeader className="px-3 py-2">
-            <CardTitle className="text-sm">Monthly Trend</CardTitle>
+            <CardTitle className="text-sm font-semibold">Monthly Trend</CardTitle>
           </CardHeader>
           <CardContent className="px-2 pb-2 pt-0">
             <ErrorBoundary name="LineChart">
@@ -173,9 +204,9 @@ export default function Overview() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="hover:shadow-md">
           <CardHeader className="px-3 py-2">
-            <CardTitle className="text-sm">Expense Breakdown</CardTitle>
+            <CardTitle className="text-sm font-semibold">Expense Breakdown</CardTitle>
           </CardHeader>
           <CardContent className="px-2 pb-2 pt-0">
             <ErrorBoundary name="PieChart">
@@ -188,9 +219,9 @@ export default function Overview() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="hover:shadow-md">
           <CardHeader className="px-3 py-2">
-            <CardTitle className="text-sm">Runway</CardTitle>
+            <CardTitle className="text-sm font-semibold">Runway</CardTitle>
           </CardHeader>
           <CardContent className="flex items-center justify-center px-2 pb-2 pt-0">
             <ErrorBoundary name="GaugeChart">
