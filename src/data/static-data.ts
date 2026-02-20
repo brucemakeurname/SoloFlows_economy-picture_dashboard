@@ -176,8 +176,21 @@ export const KPI_METRICS: KPIMetric[] = [
 ];
 
 /* ------------------------------------------------------------------ */
-/*  Dashboard Summary (computed from ledger)                           */
+/*  Available Cash (Sprint budget)                                     */
 /* ------------------------------------------------------------------ */
+export const AVAILABLE_CASH = 385;
+
+/* ------------------------------------------------------------------ */
+/*  Dashboard Summary (computed from ledger)                           */
+/*  Uses BUDGET as primary display — this is a planning dashboard.     */
+/*  Actuals are tracked on the CashFlow page for comparison.           */
+/* ------------------------------------------------------------------ */
+
+/** Pick the effective value for an entry: actual if recorded, budget otherwise */
+function effective(e: LedgerEntry): number {
+  return e.status === "actual" && e.actual !== 0 ? e.actual : e.budget;
+}
+
 export function computeSummary(period?: string): DashboardSummary {
   const periods = ["2026-02", "2026-03", "2026-04"];
   const filterEntries = period && period !== "all"
@@ -188,11 +201,13 @@ export function computeSummary(period?: string): DashboardSummary {
   const cogs = filterEntries.filter((e) => e.category_type === "cogs");
   const opex = filterEntries.filter((e) => e.category_type === "opex");
 
-  const totalRevenue = rev.reduce((s, e) => s + e.actual, 0);
-  const totalCogs = cogs.reduce((s, e) => s + e.actual, 0);
-  const totalOpex = opex.reduce((s, e) => s + e.actual, 0);
+  const totalRevenue = rev.reduce((s, e) => s + effective(e), 0);
+  const totalCogs = cogs.reduce((s, e) => s + effective(e), 0);
+  const totalOpex = opex.reduce((s, e) => s + effective(e), 0);
   const netProfit = totalRevenue - totalCogs - totalOpex;
-  const burnRate = totalCogs + totalOpex;
+  const totalExpenses = totalCogs + totalOpex;
+  const numPeriods = period && period !== "all" ? 1 : periods.length;
+  const burnRate = numPeriods > 0 ? totalExpenses / numPeriods : 0;
 
   const budgetRevenue = rev.reduce((s, e) => s + e.budget, 0);
   const budgetCogs = cogs.reduce((s, e) => s + e.budget, 0);
@@ -200,12 +215,12 @@ export function computeSummary(period?: string): DashboardSummary {
 
   const revenueByPeriod = periods.map((p) => ({
     period: p,
-    amount: LEDGER_ENTRIES.filter((e) => e.period === p && e.category_type === "revenue").reduce((s, e) => s + e.actual, 0),
+    amount: LEDGER_ENTRIES.filter((e) => e.period === p && e.category_type === "revenue").reduce((s, e) => s + effective(e), 0),
   }));
 
   const expenseByPeriod = periods.map((p) => ({
     period: p,
-    amount: LEDGER_ENTRIES.filter((e) => e.period === p && (e.category_type === "cogs" || e.category_type === "opex")).reduce((s, e) => s + e.actual, 0),
+    amount: LEDGER_ENTRIES.filter((e) => e.period === p && (e.category_type === "cogs" || e.category_type === "opex")).reduce((s, e) => s + effective(e), 0),
   }));
 
   const expenseByCategory = [
@@ -216,14 +231,14 @@ export function computeSummary(period?: string): DashboardSummary {
   const subcategories = ["Booking", "Affiliate", "Credits", "VIP"];
   const revenueBySubcategory = subcategories.map((sub) => ({
     name: sub,
-    amount: filterEntries.filter((e) => e.category_type === "revenue" && ACCOUNTS.find((a) => a.id === e.account_id)?.subcategory === sub).reduce((s, e) => s + e.actual, 0),
+    amount: filterEntries.filter((e) => e.category_type === "revenue" && ACCOUNTS.find((a) => a.id === e.account_id)?.subcategory === sub).reduce((s, e) => s + effective(e), 0),
   }));
 
   const monthlyTrend = periods.map((p) => {
     const pEntries = LEDGER_ENTRIES.filter((e) => e.period === p);
-    const r = pEntries.filter((e) => e.category_type === "revenue").reduce((s, e) => s + e.actual, 0);
-    const c = pEntries.filter((e) => e.category_type === "cogs").reduce((s, e) => s + e.actual, 0);
-    const o = pEntries.filter((e) => e.category_type === "opex").reduce((s, e) => s + e.actual, 0);
+    const r = pEntries.filter((e) => e.category_type === "revenue").reduce((s, e) => s + effective(e), 0);
+    const c = pEntries.filter((e) => e.category_type === "cogs").reduce((s, e) => s + effective(e), 0);
+    const o = pEntries.filter((e) => e.category_type === "opex").reduce((s, e) => s + effective(e), 0);
     return { period: p, revenue: r, cogs: c, opex: o, net: r - c - o };
   });
 
@@ -234,6 +249,7 @@ export function computeSummary(period?: string): DashboardSummary {
     total_capex: 0,
     net_profit: netProfit,
     burn_rate: burnRate,
+    available_cash: AVAILABLE_CASH,
     revenue_by_period: revenueByPeriod,
     expense_by_period: expenseByPeriod,
     expense_by_category: expenseByCategory,

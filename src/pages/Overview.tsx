@@ -61,9 +61,9 @@ export default function Overview() {
     if (!data) return 0;
     const burnRate = num(data.burn_rate);
     if (burnRate <= 0) return 0;
-    const cash = num(data.total_revenue) - num(data.total_cogs) - num(data.total_opex);
+    const cash = num(data.available_cash);
     if (cash <= 0) return 0;
-    return Math.round(cash / burnRate);
+    return Math.round((cash / burnRate) * 10) / 10;
   }, [data]);
 
   if (loading || !data) {

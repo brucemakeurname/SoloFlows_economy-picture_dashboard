@@ -79,6 +79,7 @@ export interface DashboardSummary {
   total_capex: number;
   net_profit: number;
   burn_rate: number;
+  available_cash: number;
   budget_revenue: number;
   budget_cogs: number;
   budget_opex: number;
