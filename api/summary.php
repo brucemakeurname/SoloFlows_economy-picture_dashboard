@@ -181,12 +181,45 @@ switch ($method) {
         $monthlyTrend = $stmt->fetchAll();
 
         // ===================================================
+        // Transform arrays to match frontend TypeScript types
+        // (MySQL PDO returns strings; Recharts needs numbers)
+        // ===================================================
+        $revenueByPeriodMapped = array_map(fn($r) => [
+            'period' => $r['period'],
+            'amount' => (float) $r['total_revenue'],
+        ], $revenueByPeriod);
+
+        $expenseByPeriodMapped = array_map(fn($r) => [
+            'period' => $r['period'],
+            'amount' => (float) $r['total_expense'],
+        ], $expenseByPeriod);
+
+        $expenseByCategoryMapped = array_map(fn($r) => [
+            'name'   => $r['category_name'],
+            'amount' => (float) $r['total_actual'],
+            'color'  => $r['category_color'] ?? '#94A3B8',
+        ], $expenseByCategory);
+
+        $revenueBySubcategoryMapped = array_map(fn($r) => [
+            'name'   => $r['subcategory'],
+            'amount' => (float) $r['total_actual'],
+        ], $revenueBySubcategory);
+
+        $monthlyTrendMapped = array_map(fn($r) => [
+            'period'  => $r['period'],
+            'revenue' => (float) $r['revenue'],
+            'cogs'    => (float) $r['cogs'],
+            'opex'    => (float) $r['opex'],
+            'net'     => (float) $r['net'],
+        ], $monthlyTrend);
+
+        // ===================================================
         // Assemble response
         // ===================================================
         $summary = [
             'period'         => $period ?? 'all',
 
-            // Top-level totals
+            // Top-level totals (already float from casting above)
             'total_revenue'  => $totals['total_revenue'],
             'total_cogs'     => $totals['total_cogs'],
             'total_opex'     => $totals['total_opex'],
@@ -200,12 +233,12 @@ switch ($method) {
             'budget_opex'    => $budgets['budget_opex'],
             'budget_capex'   => $budgets['budget_capex'],
 
-            // Breakdowns
-            'revenue_by_period'      => $revenueByPeriod,
-            'expense_by_period'      => $expenseByPeriod,
-            'expense_by_category'    => $expenseByCategory,
-            'revenue_by_subcategory' => $revenueBySubcategory,
-            'monthly_trend'          => $monthlyTrend,
+            // Breakdowns (mapped to match frontend types)
+            'revenue_by_period'      => $revenueByPeriodMapped,
+            'expense_by_period'      => $expenseByPeriodMapped,
+            'expense_by_category'    => $expenseByCategoryMapped,
+            'revenue_by_subcategory' => $revenueBySubcategoryMapped,
+            'monthly_trend'          => $monthlyTrendMapped,
         ];
 
         jsonResponse($summary);
