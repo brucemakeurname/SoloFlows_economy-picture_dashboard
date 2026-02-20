@@ -1,4 +1,4 @@
-import { useCallback, useMemo } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import type { LedgerEntry } from "@/lib/types";
 import { useApi } from "@/hooks/useApi";
 
@@ -14,6 +14,8 @@ interface UseLedgerResult {
   deleteEntry: (id: number) => Promise<void>;
   refetch: () => void;
 }
+
+let nextLocalId = 1000;
 
 export function useLedger(
   period?: string,
@@ -32,29 +34,45 @@ export function useLedger(
     categoryType,
   ]);
 
-  // CRUD ops are no-ops in static mode (data is read-only)
+  const [entries, setEntries] = useState<LedgerEntry[]>([]);
+
+  // Sync local state when static data changes (period/filter change)
+  useEffect(() => {
+    if (data) setEntries(data);
+  }, [data]);
+
   const createEntry = useCallback(
     async (body: Omit<LedgerEntry, "id">): Promise<LedgerEntry> => {
-      console.warn("[Static mode] createEntry is disabled");
-      return { id: 0, ...body } as LedgerEntry;
+      const newEntry = { id: nextLocalId++, ...body } as LedgerEntry;
+      setEntries((prev) => [...prev, newEntry]);
+      return newEntry;
     },
     []
   );
 
   const updateEntry = useCallback(
     async (id: number, body: Partial<LedgerEntry>): Promise<LedgerEntry> => {
-      console.warn("[Static mode] updateEntry is disabled");
-      return { id, ...body } as LedgerEntry;
+      let updated: LedgerEntry | null = null;
+      setEntries((prev) =>
+        prev.map((e) => {
+          if (e.id === id) {
+            updated = { ...e, ...body };
+            return updated;
+          }
+          return e;
+        })
+      );
+      return updated ?? ({ id, ...body } as LedgerEntry);
     },
     []
   );
 
-  const deleteEntry = useCallback(async (_id: number): Promise<void> => {
-    console.warn("[Static mode] deleteEntry is disabled");
+  const deleteEntry = useCallback(async (id: number): Promise<void> => {
+    setEntries((prev) => prev.filter((e) => e.id !== id));
   }, []);
 
   return {
-    entries: data ?? [],
+    entries,
     loading,
     error,
     createEntry,

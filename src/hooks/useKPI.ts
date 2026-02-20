@@ -1,4 +1,4 @@
-import { useCallback, useMemo } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import type { KPIMetric } from "@/lib/types";
 import { useApi } from "@/hooks/useApi";
 
@@ -11,6 +11,8 @@ interface UseKPIResult {
   deleteKPI: (id: number) => Promise<void>;
   refetch: () => void;
 }
+
+let nextLocalId = 2000;
 
 export function useKPI(period?: string, groupName?: string): UseKPIResult {
   const endpoint = useMemo(() => {
@@ -26,29 +28,44 @@ export function useKPI(period?: string, groupName?: string): UseKPIResult {
     groupName,
   ]);
 
-  // CRUD ops are no-ops in static mode
+  const [kpis, setKpis] = useState<KPIMetric[]>([]);
+
+  useEffect(() => {
+    if (data) setKpis(data);
+  }, [data]);
+
   const createKPI = useCallback(
     async (body: Omit<KPIMetric, "id">): Promise<KPIMetric> => {
-      console.warn("[Static mode] createKPI is disabled");
-      return { id: 0, ...body } as KPIMetric;
+      const newKPI = { id: nextLocalId++, ...body } as KPIMetric;
+      setKpis((prev) => [...prev, newKPI]);
+      return newKPI;
     },
     []
   );
 
   const updateKPI = useCallback(
     async (id: number, body: Partial<KPIMetric>): Promise<KPIMetric> => {
-      console.warn("[Static mode] updateKPI is disabled");
-      return { id, ...body } as KPIMetric;
+      let updated: KPIMetric | null = null;
+      setKpis((prev) =>
+        prev.map((k) => {
+          if (k.id === id) {
+            updated = { ...k, ...body };
+            return updated;
+          }
+          return k;
+        })
+      );
+      return updated ?? ({ id, ...body } as KPIMetric);
     },
     []
   );
 
-  const deleteKPI = useCallback(async (_id: number): Promise<void> => {
-    console.warn("[Static mode] deleteKPI is disabled");
+  const deleteKPI = useCallback(async (id: number): Promise<void> => {
+    setKpis((prev) => prev.filter((k) => k.id !== id));
   }, []);
 
   return {
-    kpis: data ?? [],
+    kpis,
     loading,
     error,
     createKPI,

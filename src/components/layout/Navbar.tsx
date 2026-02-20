@@ -32,8 +32,7 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
     <header
       className={cn(
         "sticky top-0 z-30 flex h-16 items-center justify-between gap-4 border-b border-border px-4",
-        "bg-background/80 backdrop-blur-xl",
-        "lg:pl-68"
+        "bg-background/80 backdrop-blur-xl"
       )}
     >
       <div className="flex items-center gap-3">
