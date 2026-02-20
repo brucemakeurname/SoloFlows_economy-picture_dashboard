@@ -19,6 +19,9 @@ api/config.env.php
 api/error_log
 error_log
 
+# Windows artifacts
+NUL
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
