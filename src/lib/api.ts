@@ -21,8 +21,9 @@ async function request<T>(
       return { data: null as T, error: body.error || `HTTP ${res.status}` };
     }
 
-    const data = await res.json();
-    return { data };
+    const json = await res.json();
+    // API wraps responses in { success, data } — unwrap it
+    return { data: json.data ?? json };
   } catch (err) {
     return {
       data: null as T,
