@@ -13,5 +13,18 @@
   </head>
   <body class="antialiased">
     <div id="root"></div>
+    <div id="error-display" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:#1a1a2e;color:#e94560;padding:20px;font-family:monospace;white-space:pre-wrap;z-index:99999;overflow:auto"></div>
+    <script>
+      window.onerror = function(msg, src, line, col, err) {
+        var el = document.getElementById('error-display');
+        el.style.display = 'block';
+        el.textContent = 'ERROR: ' + msg + '\nSource: ' + src + '\nLine: ' + line + ':' + col + '\n\nStack:\n' + (err && err.stack || 'N/A');
+      };
+      window.addEventListener('unhandledrejection', function(e) {
+        var el = document.getElementById('error-display');
+        el.style.display = 'block';
+        el.textContent = 'UNHANDLED PROMISE: ' + (e.reason && e.reason.stack || e.reason || 'Unknown');
+      });
+    </script>
   </body>
 </html>
