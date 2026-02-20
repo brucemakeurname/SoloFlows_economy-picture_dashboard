@@ -1,0 +1,50 @@
+# ============================================================
+# Economy Picture Dashboard - Apache Rewrite Rules
+# Clean API URLs and CORS preflight handling
+# ============================================================
+
+RewriteEngine On
+
+# -----------------------------------------------------------
+# Handle CORS preflight OPTIONS requests
+# -----------------------------------------------------------
+RewriteCond %{REQUEST_METHOD} OPTIONS
+RewriteRule ^(.*)$ $1 [R=204,L]
+
+# -----------------------------------------------------------
+# Clean URL rewrites
+# -----------------------------------------------------------
+
+# /api/accounts -> accounts.php
+RewriteRule ^accounts/?$        accounts.php    [L,QSA]
+RewriteRule ^accounts/(\d+)/?$  accounts.php?id=$1 [L,QSA]
+
+# /api/ledger -> ledger.php
+RewriteRule ^ledger/?$          ledger.php      [L,QSA]
+RewriteRule ^ledger/(\d+)/?$    ledger.php?id=$1 [L,QSA]
+
+# /api/kpi -> kpi.php
+RewriteRule ^kpi/?$             kpi.php         [L,QSA]
+RewriteRule ^kpi/(\d+)/?$       kpi.php?id=$1   [L,QSA]
+
+# /api/categories -> categories.php
+RewriteRule ^categories/?$      categories.php  [L,QSA]
+
+# /api/periods -> periods.php
+RewriteRule ^periods/?$         periods.php     [L,QSA]
+
+# /api/summary -> summary.php
+RewriteRule ^summary/?$         summary.php     [L,QSA]
+
+# -----------------------------------------------------------
+# Security: deny access to config files
+# -----------------------------------------------------------
+<Files "config.php">
+    Order Allow,Deny
+    Deny from all
+</Files>
+
+# -----------------------------------------------------------
+# Prevent directory listing
+# -----------------------------------------------------------
+Options -Indexes
