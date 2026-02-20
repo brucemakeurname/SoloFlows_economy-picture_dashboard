@@ -6,13 +6,20 @@
 // ============================================================
 
 // -----------------------------------------------------------
-// Database credentials (use environment variables or constants)
+// Database credentials
+// Load from config.env.php (gitignored, production) if it exists,
+// otherwise fall back to environment variables / dev defaults.
 // -----------------------------------------------------------
-define('DB_HOST', getenv('EP_DB_HOST') ?: 'localhost');
-define('DB_NAME', getenv('EP_DB_NAME') ?: 'economy_picture');
-define('DB_USER', getenv('EP_DB_USER') ?: 'root');
-define('DB_PASS', getenv('EP_DB_PASS') ?: '');
-define('DB_PORT', getenv('EP_DB_PORT') ?: '3306');
+$envConfig = __DIR__ . '/config.env.php';
+if (file_exists($envConfig)) {
+    require_once $envConfig;
+}
+
+if (!defined('DB_HOST')) define('DB_HOST', getenv('EP_DB_HOST') ?: 'localhost');
+if (!defined('DB_NAME')) define('DB_NAME', getenv('EP_DB_NAME') ?: 'economy_picture');
+if (!defined('DB_USER')) define('DB_USER', getenv('EP_DB_USER') ?: 'root');
+if (!defined('DB_PASS')) define('DB_PASS', getenv('EP_DB_PASS') ?: '');
+if (!defined('DB_PORT')) define('DB_PORT', getenv('EP_DB_PORT') ?: '3306');
 
 // -----------------------------------------------------------
 // CORS Headers

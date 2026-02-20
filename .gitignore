@@ -11,6 +11,10 @@ node_modules
 dist-ssr
 *.local
 
+# Environment / secrets
+.env
+api/config.env.php
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
