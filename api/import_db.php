@@ -15,7 +15,7 @@ try {
     $tables = $pdo->query("SHOW TABLES")->fetchAll(PDO::FETCH_COLUMN);
     $results['existing_tables'] = $tables;
 
-    $schema = file_get_contents(__DIR__ . '/database/schema.sql');
+    $schema = file_get_contents(__DIR__ . '/../database/schema.sql');
     if ($schema) {
         $pdo->exec($schema);
         $results['schema'] = 'imported';
@@ -23,7 +23,7 @@ try {
         $results['schema'] = 'file not found';
     }
 
-    $seed = file_get_contents(__DIR__ . '/database/seed.sql');
+    $seed = file_get_contents(__DIR__ . '/../database/seed.sql');
     if ($seed) {
         $pdo->exec($seed);
         $results['seed'] = 'imported';
